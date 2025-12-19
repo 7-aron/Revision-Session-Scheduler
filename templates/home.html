@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Smart Revision Scheduler</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/home.css') }}">
+</head>
+<body>
+
+  <!-- Smart Revision Scheduler Header -->
+  <header class="header">
+    <h1 id="home-label" class="clickable">Smart Revision Scheduler</h1>
+    <a href="{{ url_for('help_page') }}" class="help" id="help-label">Help</a>
+  </header>
+
+  <!-- Main Content of Page -->
+  <main class="main">
+    <h2>Plan Smarter.<br>Study Smarter</h2>
+    <p class="subtitle">Generate a revision timetable that adapts to you</p>
+
+    <div class="button-group">
+      <button type="button" class="btn primary" id="start-new-timetable">Start New Timetable</button>
+      <button type="button" class="btn secondary" id="load-timetable">Load Timetable</button>
+    </div>
+
+    <a href="{{ url_for('help_page') }}" class="how-it-works" id="how-it-works">How it Works</a>
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <p id="footer-label" class="clickable">Smart Revision Scheduler</p>
+  </footer>
+
+  <!-- Javascript Code for naviagting between web pages -->
+  <script>
+    const navigation = {
+      startNewTimetable: "{{ url_for('subject_input') }}",
+      loadTimetable: "{{ url_for('timetable_dashboard') }}",
+      helpPage: "{{ url_for('help_page') }}",
+      homePage: "{{ url_for('home') }}"
+    };
+
+    document.getElementById('start-new-timetable').onclick = () => window.location.href = navigation.startNewTimetable;
+    document.getElementById('load-timetable').onclick = () => window.location.href = navigation.loadTimetable;
+    document.getElementById('home-label').onclick = () => window.location.href = navigation.homePage;
+    document.getElementById('help-label').onclick = () => window.location.href = navigation.helpPage;
+    document.getElementById('footer-label').onclick = () => window.location.href = navigation.homePage;
+    document.getElementById('export-btn').onclick = () => window.location.href="{{ url_for('timetable_dashboard') }}";
+  </script>
+
+</body>
+</html>

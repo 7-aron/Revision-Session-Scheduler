@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Help – Smart Revision Scheduler</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/help.css') }}">
+</head>
+
+<body>
+
+  <!-- Header -->
+  <header class="header">
+    <h1 id="home-label" class="clickable">Smart Revision Scheduler</h1>
+    <a href="{{ url_for('help_page') }}" class="help">Help</a>
+  </header>
+
+  <!-- Main -->
+  <main class="help-container">
+
+    <section class="section">
+      <h2>Help</h2>
+
+      <h3>Getting Started</h3>
+      <p>Welcome to Smart Revision Scheduler – your personalised study timetable personalised to you.</p>
+      <p>To begin, click <strong>Start New Timetable </strong>on the home page. If you have already created a timetable select <strong>Load Timetable</strong></p>
+      <p>1. Add your subjects, exam dates and confidence level</p>
+      <p>2. Enter your weekly availability to study </p>
+      <p>3. Add any commitments like work, dinner or sports </p>
+
+      <h3>Adding Subjects</h3>
+      <p>Each subject requires a name, exam date and confidence level. </p> 
+      <p>You may add notes for future reference, for example</p>
+      <p>   'Focus on Paper 2 Topics'</p>
+      <p>Notes will appear when you hover over a subject in your timetable, helping you remember what to focus on.</p>
+      <p>Use <strong>Add Subject</strong> to include mutliple subjects</p>
+
+      <h3>Choosing Your Confidence Level</h3>
+<p>Use the table below to help you decide your confidence level for each subject:</p>
+
+<table class="confidence-table">
+  <tr>
+    <th>Confidence Level</th>
+    <th>Description</th>
+    <th>Typical Recent Score</th>
+  </tr>
+
+  <tr>
+    <td><strong>High</strong></td>
+    <td>You have strong understanding and rarely struggle with the content.</td>
+    <td>A*/ A (70%+)</td>
+  </tr>
+
+  <tr>
+    <td><strong>Medium</strong></td>
+    <td>You understand most topics but still have some gaps or inconsistencies.</td>
+    <td>B / C (50–69%)</td>
+  </tr>
+
+  <tr>
+    <td><strong>Low</strong></td>
+    <td>You find the subject challenging or scored poorly in recent tests.</td>
+    <td>D or below (under 50%)</td>
+  </tr>
+</table>
+
+      <h3>Setting Availability</h3>
+      <p>Availability is the time of day when you can study. Choose your start and end time for each day you wish to study.</p>
+      <p>The scheduler will only generate sessions inside your availability and avoid overlapping instances.</p>
+
+      <h3>Adding Commitments</h3>
+      <p>Commitments block out time you cannot study. Each commitment includes:</p>
+      <ul>
+        <li>Name of commitment</li>
+        <li> Date </li>
+        <li>Start/End Time</li>
+        <li>Nature of repetition (Daily, Weekly, Custom Days)</li>
+      </ul>
+
+      <p>If you pick <strong>Daily</strong>, it repeats every day until exam finish.  
+         If you pick <strong>Weekly</strong>, it repeats the same day every week.  
+         If you select <strong>Custom</strong>, you can choose specific days manually.</p>
+
+      <h3>Summary</h3>
+      <p>After entering all details, select <strong>Save and Continue</strong> to see a summary page with all your inputs.  
+         You can press edit, if you wish to change any details
+         When ready, click <strong>Generate Timetable</strong> to create your personalised study plan.</p>
+
+      <h3>Saving & Exporting</h3>
+      <p>Your timetable is saved automatically in your browser’s local storage.</p>
+      <p>You can reload it anytime using <strong>Load Existing Timetable</strong> from the home screen.</p>
+      <p>To print or share it, use <strong>Export Timetable</strong> to save as PDF or CSV.</p>
+    </section>
+    
+    <hr class="divider">
+
+    <section class="section">
+      <h2>How It Works</h2>
+
+      <h3>Step 1: Input Collection</h3>
+      <p>The system takes in three main types of information:</p>
+      <ul>
+        <li><strong>Subjects</strong> – Your exam subjects and when the exams are</li>
+        <li><strong>Availability</strong> – The times you are free to study</li>
+        <li><strong>Commitments</strong> – Fixed times when you cannot study</li>
+      </ul>
+
+      <h3>Step 2: Processing</h3>
+      <p>When you click <strong>Generate Timetable</strong>, the system uses a scheduling algorithm:</p>
+      <ul>
+        <li>It gives greater weighting to subjects with lower confidence levels.</li>
+        <li>It considers exam dates so subjects with sooner exams receive higher priority.</li>
+        <li>Study sessions are spaced to avoid overcrowding.</li>
+        <li>It prevents study periods for subjects once the exam date has passed.</li>
+      </ul>
+
+      <h3>Step 3: Output</h3>
+      <p>The generated timetable appears on the dashboard as a weekly calendar view.  
+         Each session is colour-coded by subject and shows:</p>
+      <ul>
+        <li>Subject name</li>
+        <li>Session duration</li>
+        <li>Confidence weighting</li>
+      </ul>
+
+      <h3>Step 4: Saving & Regeneration</h3>
+      <p>All entered subjects, commitments and preferences are stored in your browser.</p>
+      <p>You can regenerate your timetable if exam dates or availability change, using the <strong>Regenerate Timetable</strong> button.</p>
+      <p>You can choose to export the timetable from the dashboard as a PDF or CSV</p>
+
+      <h3>Algorithm Explanation</h3>
+      <p>The system uses a priority-based greedy approach:</p>
+      <ul>
+        <li>Subjects sorted by exam proximity and confidence</li>
+        <li>Loops through avaialble slots</li>
+        <li>Sessions allocated into free availability blocks ensuring no overlap</li>
+        <li>Repeats until all slots are filled or until subjects are balanced throughout the week</li>
+      </ul>
+
+    </section>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <p id="footer-label" class="clickable">Smart Revision Scheduler</p>
+  </footer>
+
+  <!-- Navigation Script -->
+  <script>
+    const navigation = {
+      homePage: "{{ url_for('home') }}"
+    };
+
+    document.getElementById('home-label').onclick = () =>
+      window.location.href = navigation.homePage;
+
+    document.getElementById('footer-label').onclick = () =>
+      window.location.href = navigation.homePage;
+  </script>
+
+</body>
+</html>

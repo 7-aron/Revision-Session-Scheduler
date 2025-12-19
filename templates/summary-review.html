@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Summary & Review | Smart Revision Scheduler</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/summary-review.css') }}?v=999">
+</head>
+<body>
+
+    <div class="portrait-warning">
+        ⚠️ Please rotate your device to landscape to use this page.
+    </div> 
+
+    <header class="header">
+        <h1 id="home-title" class="clickable">Smart Revision Scheduler</h1>
+        <a href="{{ url_for('help_page') }}" class="help" id="help-link">Help</a>
+    </header>
+
+    <main class="main">
+        <h2 class="page-title">Summary & Review</h2>
+        <p class="subtitle">Review your subjects, commitments, and availability before generating your timetable.</p>
+
+        <!-- Subjects Section -->
+        <section class="table-section">
+            <h3>Subjects</h3>
+            <div class="table-wrapper" style="position: relative;">
+                <table class="styled-table" id="subjects-table">
+                    <thead>
+                        <tr>
+                            <th>Subject Name</th>
+                            <th>Exam Date</th>
+                            <th>Confidence</th>
+                            <th>Notes</th>
+                            <th class="edit-column"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for subject in subjects %}
+                        <tr data-type="subject" data-id="{{ subject['id'] }}">
+                            <td class="cell-name">{{ subject['name'] }}</td>
+                            <td class="cell-exam">{{ subject['exam_date'] }}</td>
+                            <td class="cell-conf">{{ subject['confidence'] }}</td>
+                            <td class="cell-notes">{{ subject['notes'] if 'notes' in subject.keys() else '' }}</td>
+                            <td class="edit-cell"><button class="btn edit-btn">Edit</button></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Availability Section -->
+        <section class="table-section">
+            <h3>Availability</h3>
+            <div class="table-wrapper" style="position: relative;">
+                <table class="styled-table" id="availability-table">
+                    <thead>
+                        <tr>
+                            <th>Start Time</th>
+                            <th>End Time</th>
+                            <th>Days Available</th>
+                            <th class="edit-column"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for slot in availability %}
+                        <tr data-type="availability" data-id="{{ slot['id'] or loop.index }}">
+                            <td class="cell-start">{{ slot['start_time'] }}</td>
+                            <td class="cell-end">{{ slot['end_time'] }}</td>
+                            <td class="cell-day">{{ slot['day'] }}</td>
+                            <td class="edit-cell"><button class="btn edit-btn">Edit</button></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Commitments Section -->
+        <section class="table-section">
+            <h3>Commitments</h3>
+            <div class="table-wrapper" style="position: relative;">
+                <table class="styled-table" id="commitments-table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Date</th>
+                            <th>Start Time</th>
+                            <th>End Time</th>
+                            <th>Repeat</th>
+                            <th class="edit-column"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for c in commitments %}
+                        <tr data-type="commitment" data-id="{{ c['id'] or loop.index }}">
+                            <td class="cell-name">{{ c['name'] }}</td>
+                            <td class="cell-date">{{ c['day'] }}</td>
+                            <td class="cell-start">{{ c['start_time'] }}</td>
+                            <td class="cell-end">{{ c['end_time'] }}</td>
+                            <td class="cell-repeat">{{ c['repeat_pattern'] }}</td>
+                            <td class="edit-cell"><button class="btn edit-btn">Edit</button></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <button id="generate-btn" class="btn primary">Generate Timetable ➜</button>
+    </main>
+
+    <footer class="footer">
+        <p id="footer-title">Smart Revision Scheduler</p>
+    </footer>
+
+    <script src="{{ url_for('static', filename='js/summary-review.js') }}"></script>
+</body>
+</html>

@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Subject Input | Smart Revision Scheduler</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/subject-input.css') }}" />
+</head>
+<body>
+
+  <!-- Header -->
+  <header class="header">
+    <h1 id="home-title" class="clickable">Smart Revision Scheduler</h1>
+    <a href="{{ url_for('help_page') }}" class="help" id="help-link">Help</a>
+  </header>
+
+  <!-- Main -->
+  <main class="main">
+    <h2 class="page-title">Subject Input</h2>
+    <p class="subtitle">Enter your subjects, commitments, and availability to generate your revision timetable.</p>
+
+    <!-- Subjects Section -->
+    <section class="form-section" id="subjects-section">
+      <h3>Subjects</h3>
+      <div class="form-grid">
+        <div class="form-group">
+          <label for="subject-name">Subject Name*</label>
+          <input id="subject-name" type="text" placeholder="e.g. Mathematics" 
+           value="{{ subject['name'] if subject else '' }}" required />
+        </div>
+        <div class="form-group">
+          <label for="exam-date">Exam Date*</label>
+          <input id="exam-date" type="date" 
+           value="{{ subject['exam_date'] if subject else '' }}" required />
+        </div>
+        <div class="form-group">
+          <label for="confidence-level">Confidence Level*</label>
+          <div class="custom-select">
+            <select id="confidence-level" required>
+              <option value="" disabled {{ 'selected' if not subject }}>Select level</option>
+              <option value="Low" {{ 'selected' if subject and subject['confidence'] == 'Low' }}>Low</option>
+              <option value="Medium" {{ 'selected' if subject and subject['confidence'] == 'Medium' }}>Medium</option>
+              <option value="High" {{ 'selected' if subject and subject['confidence'] == 'High' }}>High</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="subject-notes">Notes</label>
+          <input id="subject-notes" type="text" 
+           placeholder="e.g. Paper 1" 
+           value="{{ subject['notes'] if subject and 'notes' in subject.keys() else '' }}" />
+        </div>
+      </div>
+      <button type="button" class="btn primary" id="add-subject-btn">Add Subject</button>
+    </section>
+
+    <!-- Availability Section -->
+    <section class="form-section" id="availability-section">
+      <h3>Availability</h3>
+      <div class="form-grid">
+        <div class="form-group">
+          <label for="start-time">Start Time*</label>
+          <input id="start-time" type="time" value="00:00" required />
+        </div>
+        <div class="form-group">
+          <label for="end-time">End Time*</label>
+          <input id="end-time" type="time" value="23:59" required />
+        </div>
+        <div class="form-group">
+          <label>Days Available*</label>
+          <div class="multi-select" id="daysDropdown">
+            <div class="multi-select-display">Select days...</div>
+            <div class="multi-select-options">
+              {% for day in ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'] %}
+                <label><input type="checkbox" value="{{ day }}" /> {{ day }}</label>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+      </div>
+      <button type="button" class="btn primary" id="add-availability-btn">Add Availability</button>
+    </section>
+
+    <!-- Commitments Section -->
+    <section class="form-section" id="commitments-section">
+      <h3>Commitments</h3>
+      <div class="form-grid">
+        <div class="form-group">
+          <label for="commitment-name">Commitment*</label>
+          <input id="commitment-name" type="text" placeholder="e.g. Work" required />
+        </div>
+        <div class="form-group">
+          <label for="commitment-date">Date*</label>
+          <input id="commitment-date" type="date" required />
+        </div>
+        <div class="form-group">
+          <label for="commitment-start">Start Time*</label>
+          <input id="commitment-start" type="time" value="00:00" required />
+        </div>
+        <div class="form-group">
+          <label for="commitment-end">End Time*</label>
+          <input id="commitment-end" type="time" value="23:59" required />
+        </div>
+        <div class="form-group">
+          <label for="repeat-pattern">Repeat Pattern*</label>
+          <div class="custom-select">
+            <select id="repeat-pattern" required>
+              <option value="" disabled selected>Select pattern</option>
+              <option>Daily</option>
+              <option>Weekly</option>
+              <option>Custom</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <button type="button" class="btn primary" id="add-commitment-btn">Add Commitment</button>
+    </section>
+
+    <!-- Save and Continue -->
+    <button id="save-continue" class="btn save">Save and Continue ➜</button>
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <p id="footer-title" class="clickable">Smart Revision Scheduler</p>
+  </footer>
+
+  <!-- Link External JS -->
+  <script src="{{ url_for('static', filename='js/subject-input.js') }}"></script>
+</body>
+</html>

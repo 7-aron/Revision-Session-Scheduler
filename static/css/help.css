@@ -1,0 +1,150 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Inter', sans-serif;
+  }
+  
+  /* FULL PAGE GREY BACKGROUND */
+  body {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background: #f4f4f4;   /* entire background */
+    color: #000;
+  }
+
+  strong{
+    color: #000;
+  }
+  
+  /* HEADER */
+  .header {
+    background: #fff;
+    padding: 1rem 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .header h1 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  
+  .help {
+    color: #5a6eff;
+    text-decoration: none;
+    font-weight: 500;
+  }
+  .help:hover {
+    opacity: 0.7;
+  }
+  
+  /* MAIN TEXT FLOW — NO CONTAINER */
+  .help-container {
+    width: 100%;
+    padding: 2rem 3rem;      /* natural horizontal padding */
+  }
+  
+  /* TITLES (black) */
+  .help-container h2 {
+    font-size: 2rem;
+    font-weight: 800;
+    margin-bottom: 1.2rem;
+    color: #000;
+  }
+  
+  .help-container h3 {
+    font-size: 1.3rem;
+    font-weight: 700;
+    margin-top: 1.6rem;
+    margin-bottom: 0.7rem;
+    color: #000;
+  }
+  
+  /* NORMAL TEXT = grey (#6a6a6a) */
+  .help-container p,
+  .help-container ul li {
+    font-size: 1rem;
+    line-height: 1.6;
+    color: #6a6a6a;
+    margin-bottom: 0.7rem;
+  }
+  
+  .help-container ul {
+    margin-left: 1.2rem;
+    margin-bottom: 1rem;
+  }
+  
+  /* FOOTER */
+  .footer {
+    background: #fff;
+    padding: 0.7rem 2rem;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  .divider {
+    border: none;
+    border-top: 1px solid #6a6a6a;   /* subtle grey line */
+    width: 100%;
+    margin: 2rem 0;                  /* spacing above & below */
+  }
+
+.section p,
+.section ul li {
+  line-height: 1.4;
+}
+
+.confidence-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1rem 0 2rem 0;
+  }
+  
+  .confidence-table th,
+  .confidence-table td {
+    border: 1px solid #6a6a6a;
+    padding: 0.7rem 1rem;
+    text-align: left;
+    font-size: 1rem;
+    line-height: 1.35;
+  }
+  
+  /* Header row */
+  .confidence-table th {
+    background: #e0e0e0;
+    color: #000;
+    font-weight: 700;
+  }
+  
+  /* Body text grey */
+  .confidence-table td {
+    color: #6a6a6a;
+  }
+  
+  /* Optional: Slight zebra rows */
+  .confidence-table tr:nth-child(even) {
+    background: #f1f1f1;
+  }
+  
+  
+  /* MOBILE */
+  @media (max-width: 600px) {
+    .help-container {
+      padding: 1.5rem 1.2rem;   /* tighter on mobile */
+    }
+  
+    .help-container h2 {
+      font-size: 1.6rem;
+    }
+  
+    .help-container h3 {
+      font-size: 1.15rem;
+    }
+  }
+
+
+  
