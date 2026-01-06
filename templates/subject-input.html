@@ -21,12 +21,12 @@
 
     <!-- Subjects Section -->
     <section class="form-section" id="subjects-section">
-      <h3>Subjects</h3>
+      <h3>Subjects* <a href="{{ url_for('help_page') }}#subjects" class="help-icon">🤔</a></h3>
       <div class="form-grid">
         <div class="form-group">
           <label for="subject-name">Subject Name*</label>
           <input id="subject-name" type="text" placeholder="e.g. Mathematics" 
-           value="{{ subject['name'] if subject else '' }}" required />
+           value="{{ subject['name'] if subject else '' }}" required, maxlength="35"/>
         </div>
         <div class="form-group">
           <label for="exam-date">Exam Date*</label>
@@ -48,7 +48,7 @@
           <label for="subject-notes">Notes</label>
           <input id="subject-notes" type="text" 
            placeholder="e.g. Paper 1" 
-           value="{{ subject['notes'] if subject and 'notes' in subject.keys() else '' }}" />
+           value="{{ subject['notes'] if subject and 'notes' in subject.keys() else '' }}", maxlength="40" />
         </div>
       </div>
       <button type="button" class="btn primary" id="add-subject-btn">Add Subject</button>
@@ -56,15 +56,15 @@
 
     <!-- Availability Section -->
     <section class="form-section" id="availability-section">
-      <h3>Availability</h3>
+      <h3>Availability* <a href="{{ url_for('help_page') }}#availability" class="help-icon">🤔</a></h3>
       <div class="form-grid">
         <div class="form-group">
           <label for="start-time">Start Time*</label>
-          <input id="start-time" type="time" value="00:00" required />
+          <input id="start-time" type="time" required />
         </div>
         <div class="form-group">
           <label for="end-time">End Time*</label>
-          <input id="end-time" type="time" value="23:59" required />
+          <input id="end-time" type="time" required />
         </div>
         <div class="form-group">
           <label>Days Available*</label>
@@ -83,11 +83,11 @@
 
     <!-- Commitments Section -->
     <section class="form-section" id="commitments-section">
-      <h3>Commitments</h3>
+      <h3>Commitments <a href="{{ url_for('help_page') }}#commitments" class="help-icon">🤔</a></h3>
       <div class="form-grid">
         <div class="form-group">
           <label for="commitment-name">Commitment*</label>
-          <input id="commitment-name" type="text" placeholder="e.g. Work" required />
+          <input id="commitment-name" type="text" placeholder="e.g. Work" required maxlength="25"/>
         </div>
         <div class="form-group">
           <label for="commitment-date">Date*</label>
@@ -95,11 +95,11 @@
         </div>
         <div class="form-group">
           <label for="commitment-start">Start Time*</label>
-          <input id="commitment-start" type="time" value="00:00" required />
+          <input id="commitment-start" type="time" required />
         </div>
         <div class="form-group">
           <label for="commitment-end">End Time*</label>
-          <input id="commitment-end" type="time" value="23:59" required />
+          <input id="commitment-end" type="time" required />
         </div>
         <div class="form-group">
           <label for="repeat-pattern">Repeat Pattern*</label>
@@ -108,7 +108,7 @@
               <option value="" disabled selected>Select pattern</option>
               <option>Daily</option>
               <option>Weekly</option>
-              <option>Custom</option>
+              <option>One-Time</option>
             </select>
           </div>
         </div>

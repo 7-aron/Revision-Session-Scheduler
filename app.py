@@ -25,7 +25,8 @@ def init_db():
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 name TEXT NOT NULL,
                 exam_date TEXT NOT NULL,
-                confidence TEXT NOT NULL
+                confidence TEXT NOT NULL,
+                notes TEXT
             )
         ''')
 
@@ -156,6 +157,9 @@ def update_subject():
     if not subject_id or not name or not exam_date or not confidence:
         return jsonify({"status": "error", "message": "Missing required fields"}), 400
 
+    # Normalize name
+    name_norm = name.lower()
+
     try:
         d = datetime.strptime(exam_date, '%Y-%m-%d').date()
     except ValueError:
@@ -168,9 +172,19 @@ def update_subject():
 
     with get_db_connection() as conn:
         cur = conn.cursor()
+        
+        # Check if subject exists
         cur.execute("SELECT id FROM subjects WHERE id = ?", (subject_id,))
         if not cur.fetchone():
             return jsonify({"status": "error", "message": "Subject not found"}), 404
+        
+        # Check for duplicate subject name (excluding current subject)
+        cur.execute("SELECT id FROM subjects WHERE LOWER(name)=? AND id != ?", (name_norm, subject_id))
+        if cur.fetchone():
+            return jsonify({
+                "status": "error",
+                "message": f"Subject '{name}' already exists. Please edit the existing subject."
+            }), 400
 
         cur.execute("""
             UPDATE subjects
@@ -427,7 +441,7 @@ def delete_commitment():
         conn.commit()
     return jsonify({"status": "success"}), 200
 
-# Add this to your Flask app.py
+# ------------------- TIMETABLE GENERATION -------------------
 
 @app.route("/generate_timetable", methods=["POST"])
 def generate_timetable_route():
@@ -495,7 +509,7 @@ def generate_timetable_route():
 @app.route("/get_revision_sessions", methods=["GET"])
 def get_revision_sessions():
     """
-    Get all revision sessions from database
+    Get all revision sessions from database with notes
     Optional query params: start_date, end_date for filtering
     """
     start_date = request.args.get("start_date")  # Format: YYYY-MM-DD
@@ -504,18 +518,18 @@ def get_revision_sessions():
     try:
         with get_db_connection() as conn:
             if start_date and end_date:
-                # Fetch sessions within date range
+                # Fetch sessions within date range with notes
                 sessions = conn.execute("""
-                    SELECT rs.*, s.name as subject_name
+                    SELECT rs.*, s.name as subject_name, s.notes as subject_notes
                     FROM revision_sessions rs
                     JOIN subjects s ON rs.subject_id = s.id
                     WHERE rs.date BETWEEN ? AND ?
                     ORDER BY rs.date, rs.start_time
                 """, (start_date, end_date)).fetchall()
             else:
-                # Fetch all sessions
+                # Fetch all sessions with notes
                 sessions = conn.execute("""
-                    SELECT rs.*, s.name as subject_name
+                    SELECT rs.*, s.name as subject_name, s.notes as subject_notes
                     FROM revision_sessions rs
                     JOIN subjects s ON rs.subject_id = s.id
                     ORDER BY rs.date, rs.start_time
@@ -538,7 +552,8 @@ def get_revision_sessions():
             result[date_str].append({
                 "subject": session['subject_name'],
                 "start": start_float,
-                "end": end_float
+                "end": end_float,
+                "notes": session['subject_notes'] or ""
             })
         
         return jsonify(result), 200
@@ -547,8 +562,24 @@ def get_revision_sessions():
         print(f"Error fetching sessions: {e}")
         return jsonify({"status": "error", "message": str(e)}), 500
 
+@app.route('/check-timetable')
+def check_timetable():
+    #Check if a timetable with any revision sessions exists 
+    with get_db_connection() as conn:
+        result = conn.execute("""
+            SELECT COUNT(*) as count 
+            FROM revision_sessions rs
+            JOIN subjects s ON rs.subject_id = s.id
+        """).fetchone()
+        session_count = result['count'] if result else 0
+        
+    return jsonify({
+        'exists': session_count > 0,
+        'has_sessions': session_count > 0,
+        'count': session_count
+    })
 
 # ------------------- MAIN -------------------
 
 if __name__ == "__main__":
-    app.run(debug=True, host="0.0.0.0", port=5001)
+    app.run(debug=True, host="0.0.0.0", port=5002)

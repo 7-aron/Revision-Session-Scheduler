@@ -1,5 +1,5 @@
 /* =========================================
-   RESET
+   RESET & BASE
 ========================================= */
 * {
     margin: 0;
@@ -30,18 +30,29 @@ body {
 }
 
 /* =========================================
-   HEADER
+   HEADER & FOOTER
 ========================================= */
+.header,
+.footer {
+    background: #fff;
+    padding: 0.7rem 2rem;
+}
+
 .header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 1rem 2rem;
-    background: #fff;
+    padding-top: 1rem;
+    padding-bottom: 1rem;
 }
 
 .header h1 {
     font-size: 1.2rem;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.footer {
     font-weight: 700;
     cursor: pointer;
 }
@@ -57,7 +68,7 @@ body {
 }
 
 /* =========================================
-   MAIN
+   MAIN CONTENT
 ========================================= */
 .main {
     flex: 1;
@@ -79,7 +90,7 @@ body {
 }
 
 /* =========================================
-   WHITE CONTAINER (SECTION)
+   SECTIONS & TABLES
 ========================================= */
 .table-section {
     background: #fff;
@@ -95,9 +106,6 @@ body {
     margin-bottom: 1rem;
 }
 
-/* =========================================
-   TABLE
-========================================= */
 .styled-table {
     width: 100%;
     border-collapse: collapse;
@@ -127,7 +135,81 @@ body {
 }
 
 /* =========================================
-   DELETE BUTTONS OUTSIDE TABLE
+   BUTTONS
+========================================= */
+.btn {
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: transform 0.15s ease-in-out;
+}
+
+.edit-btn {
+    background: #fafafa;
+    border: 1px solid #c1c1c1;
+    color: #5a6eff;
+    width: 70px;
+    font-weight: 500;
+    font-size: 0.9rem;
+    padding: 0.6rem 1.2rem;
+}
+
+.edit-btn:hover {
+    background: #e0e3ff;
+}
+
+.btn.primary {
+    background-color: #c1c1c1;
+    color: #000;
+    font-weight: 600;
+    font-size: medium;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.8rem 1.6rem;
+    margin-top: 1rem;
+}
+
+.btn.primary:hover {
+    transform: translateY(-2px);
+    opacity: 0.9;
+}
+
+.save-btn,
+.delete-btn {
+    color: #fff;
+    border-radius: 6px;
+}
+
+.save-btn {
+    background-color: #5a6eff;
+}
+
+.save-btn:hover {
+    background-color: #3f4ecc;
+}
+
+.cancel-btn {
+    background-color: #f4f4f4;
+    color: #333;
+    border-radius: 6px;
+    border: 1px solid #c1c1c1;
+}
+
+.cancel-btn:hover {
+    background-color: #e0e0e0;
+}
+
+.delete-btn {
+    background-color: #e74c3c;
+}
+
+.delete-btn:hover {
+    background-color: #c0392b;
+}
+
+/* =========================================
+   DELETE X BUTTONS
 ========================================= */
 .delete-buttons-container {
     position: absolute;
@@ -145,59 +227,12 @@ body {
     font-size: 1.2rem;
     cursor: pointer;
     transition: transform 0.2s ease-in-out;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    line-height: 1;
     padding: 0;
+    line-height: 1;
 }
 
 .delete-buttons-container .delete-x:hover {
     transform: scale(1.15);
-}
-
-/* =========================================
-   EDIT BUTTON
-========================================= */
-.edit-btn {
-    background: #fafafa;
-    border: 1px solid #c1c1c1;
-    color: #5a6eff;
-    width: 70px;
-    font-weight: 500;
-    border-radius: 8px;
-    font-size: 0.9rem;
-    padding: 0.6rem 1.2rem;
-    cursor: pointer;
-    transition: transform 0.15s ease-in-out;
-}
-
-.edit-btn:hover {
-    background: #e0e3ff;
-}
-
-/* =========================================
-   PRIMARY BUTTON (Generate)
-========================================= */
-.btn.primary {
-    background-color: #c1c1c1;
-    color: #000 !important;
-    font-weight: 600;
-    font-size: medium;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.4rem;
-    padding: 0.8rem 1.6rem;
-    margin-top: 1rem;
-    border-radius: 8px;
-    transition: transform 0.15s ease-in-out, opacity 0.2s ease-in-out;
-    border: none;
-    cursor: pointer;
-}
-
-.btn.primary:hover {
-    transform: translateY(-2px);
-    opacity: 0.9;
 }
 
 /* =========================================
@@ -229,42 +264,6 @@ tr.editing {
     padding: 4px 0.8rem;
 }
 
-.save-btn {
-    background-color: #5a6eff;
-    color: #fff;
-    border-radius: 6px;
-    border: none;
-    cursor: pointer;
-}
-
-.save-btn:hover {
-    background-color: #3f4ecc;
-}
-
-.cancel-btn {
-    background-color: #f4f4f4;
-    color: #333;
-    border-radius: 6px;
-    border: 1px solid #c1c1c1;
-    cursor: pointer;
-}
-
-.cancel-btn:hover {
-    background-color: #e0e0e0;
-}
-
-.delete-btn {
-    background-color: #e74c3c;
-    color: #fff;
-    border-radius: 6px;
-    border: none;
-    cursor: pointer;
-}
-
-.delete-btn:hover {
-    background-color: #c0392b;
-}
-
 .inline-error {
     margin-top: 2px;
     font-size: 0.8rem;
@@ -293,6 +292,10 @@ tr.editing {
     line-height: 1.2rem;
     border-radius: 8px;
     background: #fff;
+}
+
+.multi-select-display.selected {
+    font-weight: 500;
 }
 
 .multi-select.active .multi-select-options {
@@ -348,10 +351,6 @@ tr.editing {
     color: #5a6eff;
 }
 
-.multi-select-display.selected {
-    font-weight: 500;
-}
-
 .cell-day .multi-select::after {
     content: "▼";
     position: absolute;
@@ -361,16 +360,6 @@ tr.editing {
     font-size: 0.8rem;
     color: #5a6eff;
     pointer-events: none;
-}
-
-/* =========================================
-   FOOTER
-========================================= */
-.footer {
-    background: #fff;
-    padding: 0.7rem 2rem;
-    font-weight: 700;
-    cursor: pointer;
 }
 
 /* =========================================
@@ -389,12 +378,9 @@ tr.editing {
 
     .main {
         padding: 1rem 0.5rem;
-        max-width: 100%;
-        margin: 0 auto;
     }
 
     .styled-table {
-        width: 100%;
         min-width: 550px;
     }
 
@@ -404,9 +390,19 @@ tr.editing {
         padding: 0.4rem 0.6rem;
     }
 
-    .edit-column { width: 70px; }
-    .delete-x { font-size: 1.1rem; }
+    .edit-column { 
+        width: 70px; 
+    }
+    
+    .delete-x { 
+        font-size: 1.1rem; 
+    }
 
-    .page-title { font-size: 1.6rem; }
-    .subtitle { font-size: 0.95rem; }
+    .page-title { 
+        font-size: 1.6rem; 
+    }
+    
+    .subtitle { 
+        font-size: 0.95rem; 
+    }
 }

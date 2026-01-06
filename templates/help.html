@@ -22,119 +22,185 @@
       <h2>Help</h2>
 
       <h3>Getting Started</h3>
-      <p>Welcome to Smart Revision Scheduler – your personalised study timetable personalised to you.</p>
-      <p>To begin, click <strong>Start New Timetable </strong>on the home page. If you have already created a timetable select <strong>Load Timetable</strong></p>
-      <p>1. Add your subjects, exam dates and confidence level</p>
-      <p>2. Enter your weekly availability to study </p>
-      <p>3. Add any commitments like work, dinner or sports </p>
+      <p>Welcome to Smart Revision Scheduler – your personalised study timetable tailored to your needs.</p>
+      <p>To begin, click <strong>Start New Timetable</strong> on the home page. If you have already created a timetable, select <strong>Load Timetable</strong>.</p>
+      <p>Follow these three steps:</p>
+      <p>1. Add your subjects, exam dates and confidence levels</p>
+      <p>2. Enter your daily availability for studying</p>
+      <p>3. Add any commitments that block out study time</p>
 
-      <h3>Adding Subjects</h3>
-      <p>Each subject requires a name, exam date and confidence level. </p> 
-      <p>You may add notes for future reference, for example</p>
-      <p>   'Focus on Paper 2 Topics'</p>
-      <p>Notes will appear when you hover over a subject in your timetable, helping you remember what to focus on.</p>
-      <p>Use <strong>Add Subject</strong> to include mutliple subjects</p>
+      <h3 id="subjects">Adding Subjects</h3>
+      <p>Each subject requires a name, exam date and confidence level.</p> 
+      <p>You may add optional notes for future reference, for example: <em>'Focus on Paper 2 Topics'</em> or <em>'Review practicals'</em>.</p>
+      <p>Notes will appear when you hover over a subject block in your timetable, helping you remember what to prioritise.</p>
+      <p>Use <strong>Add Subject</strong> to include multiple subjects. You can edit or delete subjects at any time from the Summary & Review page.</p>
 
       <h3>Choosing Your Confidence Level</h3>
-<p>Use the table below to help you decide your confidence level for each subject:</p>
+      <p>Confidence levels help the system prioritise which subjects need more study time. Use the table below as a guide:</p>
 
-<table class="confidence-table">
-  <tr>
-    <th>Confidence Level</th>
-    <th>Description</th>
-    <th>Typical Recent Score</th>
-  </tr>
+      <table class="confidence-table">
+        <tr>
+          <th>Confidence Level</th>
+          <th>Description</th>
+          <th>Typical Recent Score</th>
+        </tr>
 
-  <tr>
-    <td><strong>High</strong></td>
-    <td>You have strong understanding and rarely struggle with the content.</td>
-    <td>A*/ A (70%+)</td>
-  </tr>
+        <tr>
+          <td><strong>High</strong></td>
+          <td>You have strong understanding and rarely struggle with the content.</td>
+          <td>A*/ A (70%+)</td>
+        </tr>
 
-  <tr>
-    <td><strong>Medium</strong></td>
-    <td>You understand most topics but still have some gaps or inconsistencies.</td>
-    <td>B / C (50–69%)</td>
-  </tr>
+        <tr>
+          <td><strong>Medium</strong></td>
+          <td>You understand most topics but still have some gaps or inconsistencies.</td>
+          <td>B / C (50–69%)</td>
+        </tr>
 
-  <tr>
-    <td><strong>Low</strong></td>
-    <td>You find the subject challenging or scored poorly in recent tests.</td>
-    <td>D or below (under 50%)</td>
-  </tr>
-</table>
+        <tr>
+          <td><strong>Low</strong></td>
+          <td>You find the subject challenging or scored poorly in recent tests.</td>
+          <td>D or below (under 50%)</td>
+        </tr>
+      </table>
 
-      <h3>Setting Availability</h3>
-      <p>Availability is the time of day when you can study. Choose your start and end time for each day you wish to study.</p>
-      <p>The scheduler will only generate sessions inside your availability and avoid overlapping instances.</p>
+      <p><strong>How it affects your timetable:</strong> Subjects with <strong>Low</strong> confidence receive more revision sessions throughout the week, while <strong>High</strong> confidence subjects get fewer sessions to maintain your knowledge.</p>
 
-      <h3>Adding Commitments</h3>
-      <p>Commitments block out time you cannot study. Each commitment includes:</p>
+      <h3 id="availability">Setting Availability</h3>
+      <p>Availability defines when you are free to study each day. For each day you wish to study, set one start time and one end time.</p>
+      <p><strong>Important:</strong> You can only set <strong>one availability slot per day</strong>. If you have a break in the middle of your day (e.g., lunch, dinner, or other activities), add those breaks as commitments instead.</p>
+      <p>For example:</p>
       <ul>
-        <li>Name of commitment</li>
-        <li> Date </li>
-        <li>Start/End Time</li>
-        <li>Nature of repetition (Daily, Weekly, Custom Days)</li>
+        <li><strong>Availability:</strong> Monday 09:00 – 22:00</li>
+        <li><strong>Commitments:</strong> Lunch (12:00 – 13:00), Dinner (18:00 – 19:00)</li>
+      </ul>
+      <p>The scheduler will only generate study sessions within your availability times and will automatically avoid all commitments.</p>
+      <p>You can select multiple days at once when adding availability (e.g., Monday, Wednesday, Friday can share the same time slot).</p>
+
+      <h3 id="commitments">Adding Commitments</h3>
+      <p>Commitments block out times when you cannot study. Use commitments for anything that takes up your time, such as:</p>
+      <ul>
+        <li>Work or part-time jobs</li>
+        <li>Sports practice or gym sessions</li>
+        <li>Meals (breakfast, lunch, dinner)</li>
+        <li>Social events or appointments</li>
+        <li>Sleep or personal time</li>
       </ul>
 
-      <p>If you pick <strong>Daily</strong>, it repeats every day until exam finish.  
-         If you pick <strong>Weekly</strong>, it repeats the same day every week.  
-         If you select <strong>Custom</strong>, you can choose specific days manually.</p>
+      <p>Each commitment requires:</p>
+      <ul>
+        <li><strong>Name</strong> – What the commitment is (e.g., "Football Practice", "Dinner")</li>
+        <li><strong>Date</strong> – When it occurs</li>
+        <li><strong>Start/End Time</strong> – The duration of the commitment</li>
+        <li><strong>Repeat Pattern</strong> – How often it repeats</li>
+      </ul>
 
-      <h3>Summary</h3>
-      <p>After entering all details, select <strong>Save and Continue</strong> to see a summary page with all your inputs.  
-         You can press edit, if you wish to change any details
-         When ready, click <strong>Generate Timetable</strong> to create your personalised study plan.</p>
+      <p><strong>Repeat Patterns:</strong></p>
+      <ul>
+        <li><strong>One-Time</strong> – The commitment only occurs on the specified date</li>
+        <li><strong>Weekly</strong> – Repeats every week on the same day (e.g., every Monday)</li>
+        <li><strong>Daily</strong> – Repeats every single day until your last exam</li>
+      </ul>
 
-      <h3>Saving & Exporting</h3>
-      <p>Your timetable is saved automatically in your browser’s local storage.</p>
-      <p>You can reload it anytime using <strong>Load Existing Timetable</strong> from the home screen.</p>
-      <p>To print or share it, use <strong>Export Timetable</strong> to save as PDF or CSV.</p>
+      <p><strong>Tip:</strong> Add recurring commitments like meals as Daily or Weekly to avoid manually entering them for each day. The system will automatically exclude these times from your study schedule.</p>
+
+      <h3>Summary & Review</h3>
+      <p>After entering all your subjects, availability and commitments, click <strong>Save and Continue</strong> to view the Summary & Review page.</p>
+      <p>This page displays all your inputs in organised tables. You can:</p>
+      <ul>
+        <li><strong>Edit</strong> any record by clicking the Edit button</li>
+        <li><strong>Delete</strong> any record by clicking the ❌ icon</li>
+        <li><strong>Add more</strong> subjects, availability or commitments if needed</li>
+      </ul>
+      <p>Once you're satisfied with your inputs, click <strong>Generate Timetable</strong> to create your personalised study plan.</p>
+
+      <h3>Viewing Your Timetable</h3>
+      <p>Your generated timetable appears as a weekly calendar grid showing all your revision sessions. Each session displays:</p>
+      <ul>
+        <li>Subject name</li>
+        <li>Start and end time</li>
+        <li>Colour coding (each subject has a unique colour)</li>
+      </ul>
+      <p>Use the arrow buttons to navigate between weeks. On mobile, you can swipe through individual days for a clearer view.</p>
+      <p>Hover over any session to see your subject notes (if you added any).</p>
+
+      <h3>Regenerating Your Timetable</h3>
+      <p>If your exam dates, availability or commitments change, you can regenerate your timetable at any time.</p>
+      <p>Go to Summary & Review, make your changes, then click <strong>Generate Timetable</strong> again. The system will create a fresh schedule based on your updated information.</p>
+      <p>Alternatively, click <strong>Regenerate Timetable</strong> from the Timetable Dashboard to instantly create a new version with the same inputs.</p>
+
+      <h3>Exporting Your Timetable</h3>
+      <p>You can export your timetable as a CSV file for use in other applications like Excel or Google Sheets.</p>
+      <p>Click <strong>Export Timetable</strong> on the Timetable Dashboard. The exported file includes:</p>
+      <ul>
+        <li>Date of each session</li>
+        <li>Day of the week</li>
+        <li>Subject name</li>
+        <li>Start and end times</li>
+      </ul>
+      <p>This allows you to print your schedule, share it with others, or import it into calendar apps.</p>
     </section>
     
     <hr class="divider">
 
     <section class="section">
-      <h2>How It Works</h2>
+      <h2 id="how-it-works">How It Works</h2>
 
       <h3>Step 1: Input Collection</h3>
-      <p>The system takes in three main types of information:</p>
+      <p>The system collects three main types of information:</p>
       <ul>
-        <li><strong>Subjects</strong> – Your exam subjects and when the exams are</li>
-        <li><strong>Availability</strong> – The times you are free to study</li>
-        <li><strong>Commitments</strong> – Fixed times when you cannot study</li>
+        <li><strong>Subjects</strong> – Your exam subjects, dates, and confidence levels</li>
+        <li><strong>Availability</strong> – One time slot per day when you can study (e.g., 09:00 – 22:00)</li>
+        <li><strong>Commitments</strong> – Specific times when you are busy and cannot study</li>
+      </ul>
+      <p>All data is stored in a local database and persists between sessions.</p>
+
+      <h3>Step 2: Scheduling Algorithm</h3>
+      <p>When you click <strong>Generate Timetable</strong>, the system uses a priority-based scheduling algorithm that:</p>
+      <ul>
+        <li><strong>Prioritises subjects with low confidence</strong> – Subjects you struggle with receive more revision sessions</li>
+        <li><strong>Considers exam proximity</strong> – Subjects with sooner exams are scheduled more frequently as the date approaches</li>
+        <li><strong>Spaces out sessions</strong> – The algorithm avoids clustering all sessions for one subject on a single day</li>
+        <li><strong>Respects availability</strong> – Sessions are only placed within your specified study times</li>
+        <li><strong>Avoids commitments</strong> – The system never schedules sessions that overlap with your commitments</li>
+        <li><strong>Stops after exams</strong> – Once an exam date passes, that subject is removed from future scheduling</li>
       </ul>
 
-      <h3>Step 2: Processing</h3>
-      <p>When you click <strong>Generate Timetable</strong>, the system uses a scheduling algorithm:</p>
+      <h3>Step 3: Time Slot Allocation</h3>
+      <p>The algorithm works through your availability day by day:</p>
       <ul>
-        <li>It gives greater weighting to subjects with lower confidence levels.</li>
-        <li>It considers exam dates so subjects with sooner exams receive higher priority.</li>
-        <li>Study sessions are spaced to avoid overcrowding.</li>
-        <li>It prevents study periods for subjects once the exam date has passed.</li>
+        <li>It identifies free time blocks within your availability</li>
+        <li>It subtracts any commitments from those blocks</li>
+        <li>It assigns revision sessions to the remaining free slots</li>
+        <li>Sessions are typically 1-2 hours long depending on available space</li>
+        <li>The system balances subjects across the week to prevent overloading any single day</li>
       </ul>
 
-      <h3>Step 3: Output</h3>
-      <p>The generated timetable appears on the dashboard as a weekly calendar view.  
-         Each session is colour-coded by subject and shows:</p>
+      <h3>Step 4: Output & Display</h3>
+      <p>The generated timetable is displayed as a visual weekly grid on the Timetable Dashboard:</p>
       <ul>
-        <li>Subject name</li>
-        <li>Session duration</li>
-        <li>Confidence weighting</li>
+        <li>Each subject is assigned a unique colour for easy identification</li>
+        <li>Sessions appear as coloured blocks at their scheduled times</li>
+        <li>A legend below the timetable shows which colour represents which subject</li>
+        <li>You can navigate between weeks to see your full revision schedule</li>
       </ul>
 
-      <h3>Step 4: Saving & Regeneration</h3>
-      <p>All entered subjects, commitments and preferences are stored in your browser.</p>
-      <p>You can regenerate your timetable if exam dates or availability change, using the <strong>Regenerate Timetable</strong> button.</p>
-      <p>You can choose to export the timetable from the dashboard as a PDF or CSV</p>
-
-      <h3>Algorithm Explanation</h3>
-      <p>The system uses a priority-based greedy approach:</p>
+      <h3>Step 5: Flexibility & Regeneration</h3>
+      <p>Your timetable is not fixed. You can:</p>
       <ul>
-        <li>Subjects sorted by exam proximity and confidence</li>
-        <li>Loops through avaialble slots</li>
-        <li>Sessions allocated into free availability blocks ensuring no overlap</li>
-        <li>Repeats until all slots are filled or until subjects are balanced throughout the week</li>
+        <li>Regenerate it at any time to create a different schedule</li>
+        <li>Edit your inputs (subjects, availability, commitments) and regenerate</li>
+        <li>Export it as CSV to modify manually or import into other tools</li>
+      </ul>
+      <p>The system saves all your inputs automatically, so you can return to adjust your schedule whenever needed.</p>
+
+      <h3>Key Design Principles</h3>
+      <ul>
+        <li><strong>One availability slot per day</strong> – Simplifies scheduling and prevents conflicts</li>
+        <li><strong>Commitments handle breaks</strong> – Use commitments to block out meals, breaks, or other activities within your availability window</li>
+        <li><strong>Confidence-based weighting</strong> – Ensures you spend more time on subjects you find challenging</li>
+        <li><strong>Exam date awareness</strong> – Allocates more sessions to subjects with approaching exams</li>
+        <li><strong>No overlaps</strong> – The system guarantees no scheduling conflicts between study sessions and commitments</li>
       </ul>
 
     </section>

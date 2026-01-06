@@ -1,4 +1,4 @@
-/* ===== Reset ===== */
+/* ===== Reset & Layout ===== */
 * {
     margin: 0;
     padding: 0;
@@ -6,7 +6,6 @@
     font-family: 'Inter', sans-serif;
 }
 
-/* ===== Layout ===== */
 body {
     display: flex;
     flex-direction: column;
@@ -15,13 +14,19 @@ body {
     color: #000;
 }
 
-/* ===== Header ===== */
+/* ===== Header & Footer ===== */
+.header,
+.footer {
+    background: #fff;
+    padding: 0.7rem 2rem;
+}
+
 .header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 1rem 2rem;
-    background: #fff;
+    padding-top: 1rem;
+    padding-bottom: 1rem;
 }
 
 .header h1 {
@@ -30,11 +35,16 @@ body {
     cursor: pointer;
 }
 
+.footer {
+    font-weight: 700;
+    cursor: pointer;
+}
+
 .help {
     color: #5a6eff;
     text-decoration: none;
     font-weight: 500;
-    transition: opacity 0.2s ease-in-out;
+    transition: opacity 0.2s;
 }
 
 .help:hover {
@@ -103,24 +113,23 @@ select {
     width: 100%;
 }
 
-/* ===== Custom Select Styling ===== */
+/* ===== Custom Dropdowns ===== */
 .custom-select {
     position: relative;
-    display: inline-block;
     width: 100%;
 }
 
 .custom-select select {
     appearance: none;
-    background-color: #fff;
     padding-right: 2rem;
     cursor: pointer;
 }
 
-.custom-select::after {
+.custom-select::after,
+.multi-select::after {
     content: "▼";
     position: absolute;
-    right: 1.2rem;
+    right: 1rem;
     top: 50%;
     transform: translateY(-50%);
     font-size: 0.8rem;
@@ -128,75 +137,11 @@ select {
     pointer-events: none;
 }
 
-/* ===== Buttons ===== */
-.btn {
-    border: none;
-    border-radius: 8px;
-    font-size: 1rem;
-    padding: 0.8rem 1.5rem;
-    cursor: pointer;
-    transition: transform 0.15s ease-in-out;
+.custom-select::after {
+    right: 1.2rem;
 }
 
-.btn:hover {
-    transform: translateY(-2px);
-}
-
-.primary {
-    background-color: #5a6eff;
-    color: #fff;
-}
-
-.save {
-    background-color: #c1c1c1;
-    color: #000;
-    font-weight: 600;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.4rem;
-    padding: 0.8rem 1.6rem;
-    margin-top: 1rem;
-    transition: transform 0.15s ease-in-out, opacity 0.2s ease-in-out;
-}
-
-.btn.save:hover {
-    transform: translateY(-2px);
-    opacity: 0.9;
-}
-
-/* ===== Footer ===== */
-.footer {
-    background: #fff;
-    padding: 0.7rem 2rem;
-    text-align: left;
-    font-weight: 700;
-    cursor: pointer;
-}
-
-/* ===== Responsive Design ===== */
-@media (max-width: 600px) {
-    .main {
-        padding: 1.5rem;
-    }
-
-    .page-title {
-        font-size: 1.5rem;
-    }
-
-    .subtitle {
-        font-size: 0.8rem;
-    }
-
-    .form-section h3 {
-        font-size: 1.3rem;
-    }
-
-    .form-grid {
-        grid-template-columns: 1fr;
-    }
-}
-
-/* ===== Custom Multi-Select Dropdown ===== */
+/* ===== Multi-Select Dropdown ===== */
 .multi-select {
     position: relative;
     width: 100%;
@@ -212,21 +157,17 @@ select {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    color: #000;
     height: 2.5rem;
     line-height: 1.2rem;
     border-radius: 8px;
 }
 
-.multi-select::after {
-    content: "▼";
-    position: absolute;
-    right: 1rem;
-    top: 50%;
-    transform: translateY(-50%);
-    font-size: 0.8rem;
-    color: #5a6eff;
-    pointer-events: none;
+.multi-select-display.selected {
+    font-weight: 500;
+}
+
+.multi-select.active .multi-select-options {
+    display: block;
 }
 
 .multi-select-options {
@@ -250,8 +191,7 @@ select {
     padding: 0.45rem 0.8rem;
     cursor: pointer;
     font-size: 0.95rem;
-    color: #000;
-    transition: background 0.15s ease;
+    transition: background 0.15s;
 }
 
 .multi-select-options label:hover {
@@ -279,19 +219,73 @@ select {
     color: #5a6eff;
 }
 
-.multi-select.active .multi-select-options {
-    display: block;
+/* ===== Buttons ===== */
+.btn {
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    padding: 0.8rem 1.5rem;
+    cursor: pointer;
+    transition: transform 0.15s;
 }
 
-.multi-select-display.selected {
-    font-weight: 500;
+.btn:hover {
+    transform: translateY(-2px);
+}
+
+.primary {
+    background-color: #5a6eff;
+    color: #fff;
+}
+
+.save {
+    background-color: #c1c1c1;
     color: #000;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.8rem 1.6rem;
+    margin-top: 1rem;
 }
 
-/* ===== Form & Section Alignment ===== */
-form,
-.section-container {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
+.save:hover {
+    opacity: 0.9;
 }
+
+/* ===== Responsive Design ===== */
+@media (max-width: 600px) {
+    .main {
+        padding: 1.5rem;
+    }
+
+    .page-title {
+        font-size: 1.5rem;
+    }
+
+    .subtitle {
+        font-size: 0.8rem;
+    }
+
+    .form-section h3 {
+        font-size: 1.3rem;
+    }
+
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.help-icon {
+    display: inline;
+    margin-left: 6px;
+    font-size: 0.8em;
+    text-decoration: none;
+    opacity: 0.5;
+    transition: opacity 0.2s, transform 0.2s;
+  }
+  
+  .help-icon:hover {
+    opacity: 1;
+    transform: scale(1.1);
+  }

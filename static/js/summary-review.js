@@ -1,59 +1,96 @@
-const routes = { home: "/home", help: "/help", summary: "/summary-review", dashboard: "/timetable-dashboard" };
-document.getElementById('home-title').onclick = () => location.href = routes.home;
-document.getElementById('help-link').onclick = () => location.href = routes.help;
-document.getElementById('footer-title').onclick = () => location.href = routes.home;
+// routes for navigation
+const routes = { 
+    homePage: "/home", 
+    helpPage: "/help", 
+    summaryPage: "/summary-review", 
+    dashboardPage: "/timetable-dashboard" 
+};
 
+const today = new Date();
+const maxDate = new Date();
+maxDate.setFullYear(today.getFullYear() + 5);
+
+const DATE_LIMITS = {
+    min: today.toISOString().split('T')[0],
+    max: maxDate.toISOString().split('T')[0]
+};
+
+// click handlers for navigation
+document.getElementById('home-title').onclick = () => location.href = routes.homePage;
+document.getElementById('help-link').onclick = () => location.href = routes.helpPage;
+document.getElementById('footer-title').onclick = () => location.href = routes.homePage;
+
+// generate timetable button
 document.getElementById('generate-btn').onclick = async () => {
     try {
-        const resp = await fetch("/generate_timetable", { method: "POST" });
-        if (!resp.ok) throw new Error("Failed to generate timetable");
-        const schedule = await resp.json();
+        const res = await fetch("/generate_timetable", { method: "POST" });
+        if (!res.ok) throw new Error("Failed to generate timetable");
+        const schedule = await res.json();
 
-        // Store in sessionStorage for dashboard
-        sessionStorage.setItem("timetable", JSON.stringify(schedule));
-
-        // Redirect to timetable dashboard
-        window.location.href = routes.dashboard;
-    } catch (err) {
-        console.error("Error generating timetable:", err);
+        // go to dashboard
+        window.location.href = routes.dashboardPage;
+    } catch (error) {
+        console.error("Error generating timetable:", error);
         alert("Failed to generate timetable. Please try again.");
     }
 };
 
-let editingRow = null;
-let originalRowData = null;
+// keep track of what's being edited
+let currentEdit = null;
+let savedData = null;
 
-function escapeHtml(str) {
-    return (str || "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+// make text safe for html
+function cleanText(txt) {
+    return (txt || "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
 }
 
-function ObjectToFormData(obj){ const fd=new FormData(); Object.entries(obj).forEach(([k,v])=>fd.append(k,v)); return fd; }
-function showError(box,msg,show=true){ box.style.display=show?"block":"none"; box.textContent=msg; }
+// convert object to form data
+function toFormData(obj) {
+    const fd = new FormData();
+    Object.entries(obj).forEach(([k, v]) => fd.append(k, v));
+    return fd;
+}
 
-// -------------------- SUBJECTS INLINE EDIT --------------------
-function enableInlineEditSubject(tr){
-    if(editingRow) return;
-    editingRow = tr;
-    tr.classList.add("editing");
+// show/hide error messages
+function showErr(errBox, msg, show = true) {
+    errBox.style.display = show ? "block" : "none";
+    errBox.textContent = msg;
+}
 
-    originalRowData = {};
-    ["name","exam","conf","notes"].forEach(f=>{
-        const cell = tr.querySelector(`.cell-${f}`);
-        if(cell) originalRowData[f] = cell.textContent.trim();
+// edit subject row
+function editSubject(row) {
+    if (currentEdit) return;
+    currentEdit = row;
+    row.classList.add("editing");
+
+    savedData = {};
+    ["name", "exam", "conf", "notes"].forEach(field => {
+        const cell = row.querySelector(`.cell-${field}`);
+        if (cell) savedData[field] = cell.textContent.trim();
     });
 
-    tr.querySelector(".cell-name").innerHTML = `<input class="inline-input name-input" value="${escapeHtml(originalRowData.name)}">`;
-    tr.querySelector(".cell-exam").innerHTML = `<input class="inline-input exam-input" type="date" value="${originalRowData.exam}">`;
-    tr.querySelector(".cell-conf").innerHTML = `
+    row.querySelector(".cell-name").innerHTML = 
+        `<input class="inline-input name-input" value="${cleanText(savedData.name)}" maxlength="35">`;
+    
+    row.querySelector(".cell-exam").innerHTML = 
+        `<input class="inline-input exam-input" type="date" value="${savedData.exam}" min="${DATE_LIMITS.min}" max="${DATE_LIMITS.max}">`;
+    
+    row.querySelector(".cell-conf").innerHTML = `
         <select class="inline-input conf-input">
             <option value="">Select</option>
-            <option value="Low" ${originalRowData.conf==="Low"?"selected":""}>Low</option>
-            <option value="Medium" ${originalRowData.conf==="Medium"?"selected":""}>Medium</option>
-            <option value="High" ${originalRowData.conf==="High"?"selected":""}>High</option>
+            <option value="Low" ${savedData.conf === "Low" ? "selected" : ""}>Low</option>
+            <option value="Medium" ${savedData.conf === "Medium" ? "selected" : ""}>Medium</option>
+            <option value="High" ${savedData.conf === "High" ? "selected" : ""}>High</option>
         </select>`;
-    tr.querySelector(".cell-notes").innerHTML = `<input class="inline-input notes-input" value="${escapeHtml(originalRowData.notes)}">`;
+    
+    row.querySelector(".cell-notes").innerHTML = 
+        `<input class="inline-input notes-input" value="${cleanText(savedData.notes)}" maxlength="40">`;
 
-    const editCell = tr.querySelector(".edit-cell");
+    const editCell = row.querySelector(".edit-cell");
     editCell.innerHTML = `
         <div class="edit-actions-wrapper">
             <button class="btn save-btn">Save</button>
@@ -62,83 +99,97 @@ function enableInlineEditSubject(tr){
         <div class="inline-error" style="display:none;color:#c0392b;"></div>
     `;
 
-    tr.querySelector(".save-btn").onclick = ()=> saveInlineEditSubject(tr);
-    tr.querySelector(".cancel-btn").onclick = ()=> cancelInlineEditSubject(tr);
+    row.querySelector(".save-btn").onclick = () => saveSubject(row);
+    row.querySelector(".cancel-btn").onclick = () => cancelSubject(row);
 }
 
-function cancelInlineEditSubject(tr){
-    Object.keys(originalRowData).forEach(f=>{
-        const cell = tr.querySelector(`.cell-${f}`);
-        if(cell) cell.textContent = originalRowData[f];
+function cancelSubject(row) {
+    Object.keys(savedData).forEach(field => {
+        const cell = row.querySelector(`.cell-${field}`);
+        if (cell) cell.textContent = savedData[field];
     });
-    tr.classList.remove("editing");
-    tr.querySelector(".edit-cell").innerHTML = `<button class="btn edit-btn">Edit</button>`;
-    attachEditButtonSubject(tr);
-    editingRow=null; originalRowData=null;
+    
+    row.classList.remove("editing");
+    row.querySelector(".edit-cell").innerHTML = `<button class="btn edit-btn">Edit</button>`;
+    attachSubjectEdit(row);
+    
+    currentEdit = null;
+    savedData = null;
 }
 
-async function saveInlineEditSubject(tr){
-    const errorBox = tr.querySelector(".inline-error");
-    const subjectId = tr.dataset.id;
-    const payload = {
-        id: subjectId,
-        name: tr.querySelector(".name-input")?.value.trim() || "",
-        exam_date: tr.querySelector(".exam-input")?.value.trim() || "",
-        confidence: tr.querySelector(".conf-input")?.value || "",
-        notes: tr.querySelector(".notes-input")?.value.trim() || ""
+async function saveSubject(row) {
+    const errBox = row.querySelector(".inline-error");
+    const id = row.dataset.id;
+    
+    const data = {
+        id: id,
+        name: row.querySelector(".name-input")?.value.trim() || "",
+        exam_date: row.querySelector(".exam-input")?.value.trim() || "",
+        confidence: row.querySelector(".conf-input")?.value || "",
+        notes: row.querySelector(".notes-input")?.value.trim() || ""
     };
 
-    if(!payload.name && !payload.exam_date && !payload.confidence) return showError(errorBox,"Enter required fields");
-    if(!payload.name) return showError(errorBox,"Enter subject name");
-    if(!payload.exam_date) return showError(errorBox,"Enter exam date");
-    if(!payload.confidence) return showError(errorBox,"Select confidence level");
-    
-    showError(errorBox,"Saving...", false);
+    if (!data.name) return showErr(errBox, "Enter subject name");
+    if (!data.exam_date) return showErr(errBox, "Enter exam date");
+    if (!data.confidence) return showErr(errBox, "Select confidence level");
 
-    try{
-        const resp = await fetch("/update_subject",{ method:"POST", body:ObjectToFormData(payload) });
-        const data = await resp.json();
-        if(!data || data.status!=="success") return showError(errorBox,data?.message||"Failed save");
+    try {
+        const res = await fetch("/update_subject", { 
+            method: "POST", 
+            body: toFormData(data) 
+        });
+        const result = await res.json();
+        
+        if (!res.ok || !result || result.status !== "success") {
+            return showErr(errBox, result?.message || "Failed to save");
+        }
 
-        tr.querySelector(".cell-name").textContent = payload.name;
-        tr.querySelector(".cell-exam").textContent = payload.exam_date;
-        tr.querySelector(".cell-conf").textContent = payload.confidence;
-        tr.querySelector(".cell-notes").textContent = payload.notes;
+        row.querySelector(".cell-name").textContent = data.name;
+        row.querySelector(".cell-exam").textContent = data.exam_date;
+        row.querySelector(".cell-conf").textContent = data.confidence;
+        row.querySelector(".cell-notes").textContent = data.notes;
 
-        tr.classList.remove("editing");
-        tr.querySelector(".edit-cell").innerHTML = `<button class="btn edit-btn">Edit</button>`;
-        attachEditButtonSubject(tr);
-        editingRow=null; originalRowData=null;
-    }catch(err){ console.error(err); showError(errorBox,"Error saving changes"); }
+        row.classList.remove("editing");
+        row.querySelector(".edit-cell").innerHTML = `<button class="btn edit-btn">Edit</button>`;
+        attachSubjectEdit(row);
+        
+        currentEdit = null;
+        savedData = null;
+    } catch (error) {
+        console.error(error);
+        showErr(errBox, "Error saving changes");
+    }
 }
 
-function attachEditButtonSubject(tr){
-    const btn = tr.querySelector(".edit-btn");
-    if(!btn) return;
-    btn.onclick = ()=> enableInlineEditSubject(tr);
+function attachSubjectEdit(row) {
+    const btn = row.querySelector(".edit-btn");
+    if (!btn) return;
+    btn.onclick = () => editSubject(row);
 }
 
-// -------------------- AVAILABILITY INLINE EDIT --------------------
-function enableInlineEditAvailability(tr){
-    if(editingRow) return;
-    editingRow = tr;
-    tr.classList.add("editing");
+function editAvailability(row) {
+    if (currentEdit) return;
+    currentEdit = row;
+    row.classList.add("editing");
 
-    originalRowData = {};
-    ["start","end","day"].forEach(f=>{
-        const c = tr.querySelector(`.cell-${f}`);
-        if(c) originalRowData[f] = c.textContent.trim();
+    savedData = {};
+    ["start", "end", "day"].forEach(field => {
+        const cell = row.querySelector(`.cell-${field}`);
+        if (cell) savedData[field] = cell.textContent.trim();
     });
 
-    tr.querySelector(".cell-start").innerHTML = `<input class="inline-input start-input" type="time" value="${originalRowData.start}">`;
-    tr.querySelector(".cell-end").innerHTML = `<input class="inline-input end-input" type="time" value="${originalRowData.end}">`;
+    row.querySelector(".cell-start").innerHTML = 
+        `<input class="inline-input start-input" type="time" value="${savedData.start}">`;
+    
+    row.querySelector(".cell-end").innerHTML = 
+        `<input class="inline-input end-input" type="time" value="${savedData.end}">`;
 
-    const cell = tr.querySelector(".cell-day");
-    cell.innerHTML = "";
-    const selectedDays = originalRowData.day.split(",").map(d=>d.trim());
-    cell.appendChild(createDayMultiSelect(selectedDays));
+    const dayCell = row.querySelector(".cell-day");
+    dayCell.innerHTML = "";
+    const selectedDays = savedData.day.split(",").map(d => d.trim());
+    dayCell.appendChild(makeDaySelector(selectedDays));
 
-    const editCell = tr.querySelector(".edit-cell");
+    const editCell = row.querySelector(".edit-cell");
     editCell.innerHTML = `
         <div class="edit-actions-wrapper">
             <button class="btn save-btn">Save</button>
@@ -147,143 +198,193 @@ function enableInlineEditAvailability(tr){
         <div class="inline-error" style="display:none;color:#c0392b;"></div>
     `;
 
-    tr.querySelector(".save-btn").onclick = ()=> saveInlineEditAvailability(tr);
-    tr.querySelector(".cancel-btn").onclick = ()=> cancelInlineEditAvailability(tr);
+    row.querySelector(".save-btn").onclick = () => saveAvailability(row);
+    row.querySelector(".cancel-btn").onclick = () => cancelAvailability(row);
 }
 
-function cancelInlineEditAvailability(tr){
-    Object.keys(originalRowData).forEach(f=>{
-        const cell = tr.querySelector(`.cell-${f}`);
-        if(cell) cell.textContent = originalRowData[f];
+function cancelAvailability(row) {
+    Object.keys(savedData).forEach(field => {
+        const cell = row.querySelector(`.cell-${field}`);
+        if (cell) cell.textContent = savedData[field];
     });
-    tr.classList.remove("editing");
-    tr.querySelector(".edit-cell").innerHTML = `<button class="btn edit-btn">Edit</button>`;
-    attachEditButtonAvailability(tr);
-    editingRow=null; originalRowData=null;
+    
+    row.classList.remove("editing");
+    row.querySelector(".edit-cell").innerHTML = `<button class="btn edit-btn">Edit</button>`;
+    attachAvailabilityEdit(row);
+    
+    currentEdit = null;
+    savedData = null;
 }
 
-async function saveInlineEditAvailability(tr){
-    const errorBox = tr.querySelector(".inline-error");
-    const slotId = tr.dataset.id;
+async function saveAvailability(row) {
+    const errBox = row.querySelector(".inline-error");
+    const id = row.dataset.id;
 
-    const start_time = tr.querySelector(".start-input")?.value;
-    const end_time = tr.querySelector(".end-input")?.value;
-    const dayContainer = tr.querySelector(".cell-day .multi-select");
-    const selectedDays = Array.from(dayContainer.querySelectorAll("input:checked")).map(cb=>cb.value);
+    const start = row.querySelector(".start-input")?.value;
+    const end = row.querySelector(".end-input")?.value;
+    const daySelector = row.querySelector(".cell-day .multi-select");
+    const selectedDays = Array.from(daySelector.querySelectorAll("input:checked"))
+        .map(cb => cb.value);
 
-    if(!start_time || !end_time) return showError(errorBox,"Start/End required");
-    if(end_time <= start_time) return showError(errorBox,"End Time must be after Start Time");
-    if(selectedDays.length===0) return showError(errorBox,"Select at least one day");
+    if (!start || !end) return showErr(errBox, "Start/End required");
+    if (end <= start) return showErr(errBox, "End Time must be after Start Time");
+    if (selectedDays.length === 0) return showErr(errBox, "Select at least one day");
 
-    const payload = { id: slotId, start_time, end_time, day: selectedDays.join(", ") };
-    showError(errorBox,"Saving...", false);
+    // CHECK: Get all existing availability slots (excluding current row being edited)
+    const allRows = document.querySelectorAll("#availability-table tbody tr");
+    const existingDaySlots = {}; // Map of day -> {start, end}
+    
+    allRows.forEach(otherRow => {
+        // Skip the row we're currently editing
+        if (otherRow.dataset.id === id) return;
+        
+        const dayCell = otherRow.querySelector(".cell-day");
+        const startCell = otherRow.querySelector(".cell-start");
+        const endCell = otherRow.querySelector(".cell-end");
+        
+        if (dayCell && startCell && endCell) {
+            const days = dayCell.textContent.split(",").map(d => d.trim());
+            const startTime = startCell.textContent.trim();
+            const endTime = endCell.textContent.trim();
+            
+            days.forEach(day => {
+                existingDaySlots[day] = { start: startTime, end: endTime };
+            });
+        }
+    });
 
-    try{
-        const resp = await fetch("/update_availability",{ method:"POST", body:ObjectToFormData(payload) });
-        const data = await resp.json();
-        if(!data || data.status!=="success") return showError(errorBox,data?.message||"Failed save");
+    // Check if any selected day already exists in another availability slot
+    for (const day of selectedDays) {
+        if (existingDaySlots[day]) {
+            const { start, end } = existingDaySlots[day];
+            return showErr(errBox, `Availability for ${day} already exists (${start} – ${end}). Only one availability slot per day is allowed.`);
+        }
+    }
 
-        tr.querySelector(".cell-start").textContent = payload.start_time;
-        tr.querySelector(".cell-end").textContent = payload.end_time;
-        tr.querySelector(".cell-day").textContent = payload.day;
+    const data = { 
+        id: id, 
+        start_time: start, 
+        end_time: end, 
+        day: selectedDays.join(", ") 
+    };
 
-        tr.classList.remove("editing");
-        tr.querySelector(".edit-cell").innerHTML = `<button class="btn edit-btn">Edit</button>`;
-        attachEditButtonAvailability(tr);
-        editingRow=null; originalRowData=null;
-    }catch(err){ console.error(err); showError(errorBox,"Error saving"); }
+    try {
+        const res = await fetch("/update_availability", { 
+            method: "POST", 
+            body: toFormData(data) 
+        });
+        const result = await res.json();
+        
+        if (!result || result.status !== "success") 
+            return showErr(errBox, result?.message || "Failed to save");
+
+        row.querySelector(".cell-start").textContent = data.start_time;
+        row.querySelector(".cell-end").textContent = data.end_time;
+        row.querySelector(".cell-day").textContent = data.day;
+
+        row.classList.remove("editing");
+        row.querySelector(".edit-cell").innerHTML = `<button class="btn edit-btn">Edit</button>`;
+        attachAvailabilityEdit(row);
+        
+        currentEdit = null;
+        savedData = null;
+    } catch (error) {
+        console.error(error);
+        showErr(errBox, "Error saving");
+    }
 }
 
-function attachEditButtonAvailability(tr){
-    const btn = tr.querySelector(".edit-btn");
-    if(!btn) return;
-    btn.onclick = ()=> enableInlineEditAvailability(tr);
+function attachAvailabilityEdit(row) {
+    const btn = row.querySelector(".edit-btn");
+    if (!btn) return;
+    btn.onclick = () => editAvailability(row);
 }
 
-// -------------------- Multi-Select Dropdown --------------------
-function createDayMultiSelect(selectedDays=[]){
-    const days = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
+// day selector dropdown
+function makeDaySelector(selected = []) {
+    const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
     const container = document.createElement("div");
     container.classList.add("multi-select");
 
     const display = document.createElement("div");
     display.classList.add("multi-select-display");
-    display.textContent = selectedDays.length?selectedDays.join(", "):"Select days...";
-    if(selectedDays.length) display.classList.add("selected");
+    display.textContent = selected.length ? selected.join(", ") : "Select days...";
+    if (selected.length) display.classList.add("selected");
     container.appendChild(display);
 
     const options = document.createElement("div");
     options.classList.add("multi-select-options");
-    days.forEach(d=>{
+    
+    days.forEach(day => {
         const label = document.createElement("label");
-        label.innerHTML = `<input type="checkbox" value="${d}" ${selectedDays.includes(d)?"checked":""}/> ${d}`;
+        label.innerHTML = `<input type="checkbox" value="${day}" ${selected.includes(day) ? "checked" : ""}/> ${day}`;
         options.appendChild(label);
     });
     container.appendChild(options);
 
-    display.onclick = e=>{
+    display.onclick = (e) => {
         e.stopPropagation();
         container.classList.toggle("active");
     };
-    options.querySelectorAll("input[type=checkbox]").forEach(cb=>{
-        cb.addEventListener("change",()=>{
-            const checked = Array.from(options.querySelectorAll("input:checked")).map(i=>i.value);
-            display.textContent = checked.length?checked.join(", "):"Select days...";
-            display.classList.toggle("selected", checked.length>0);
+
+    options.querySelectorAll("input[type=checkbox]").forEach(cb => {
+        cb.addEventListener("change", () => {
+            const checked = Array.from(options.querySelectorAll("input:checked"))
+                .map(input => input.value);
+            display.textContent = checked.length ? checked.join(", ") : "Select days...";
+            display.classList.toggle("selected", checked.length > 0);
         });
     });
 
-    document.addEventListener("click",e=>{
-        if(!container.contains(e.target)) container.classList.remove("active");
+    document.addEventListener("click", (e) => {
+        if (!container.contains(e.target)) {
+            container.classList.remove("active");
+        }
     });
 
     return container;
 }
 
-// -------------------- ORIENTATION --------------------
-function checkOrientation() {
-  if(window.innerHeight > window.innerWidth){
-      document.body.classList.add("portrait");
-  } else {
-      document.body.classList.remove("portrait");
-  }
-}
+// edit commitment row
+function editCommitment(row) {
+    if (currentEdit) return;
+    currentEdit = row;
+    row.classList.add("editing");
 
-window.addEventListener("resize", checkOrientation);
-window.addEventListener("load", checkOrientation);
-
-// -------------------- COMMITMENTS INLINE EDIT -------------------
-function enableInlineEditCommitment(tr) {
-    if (editingRow) return;
-    editingRow = tr;
-    tr.classList.add("editing");
-
-    originalRowData = {};
-    ["name","date","start","end","repeat"].forEach(f=>{
-        const c = tr.querySelector(`.cell-${f}`);
-        if(c) originalRowData[f] = c.textContent.trim();
+    savedData = {};
+    ["name", "date", "start", "end", "repeat"].forEach(field => {
+        const cell = row.querySelector(`.cell-${field}`);
+        if (cell) savedData[field] = cell.textContent.trim();
     });
 
-    tr.querySelector(".cell-name").innerHTML = `<input class="inline-input name-input" value="${escapeHtml(originalRowData.name)}">`;
-    tr.querySelector(".cell-date").innerHTML = `<input class="inline-input date-input" type="date" value="${originalRowData.date}">`;
-    tr.querySelector(".cell-start").innerHTML = `<input class="inline-input start-input" type="time" value="${originalRowData.start}">`;
-    tr.querySelector(".cell-end").innerHTML = `<input class="inline-input end-input" type="time" value="${originalRowData.end}">`;
+    row.querySelector(".cell-name").innerHTML = 
+        `<input class="inline-input name-input" value="${cleanText(savedData.name)}">`;
+    
+    row.querySelector(".cell-date").innerHTML = 
+        `<input class="inline-input date-input" type="date" value="${savedData.date}" min="${DATE_LIMITS.min}" max="${DATE_LIMITS.max}">`;
+    
+    row.querySelector(".cell-start").innerHTML = 
+        `<input class="inline-input start-input" type="time" value="${savedData.start}">`;
+    
+    row.querySelector(".cell-end").innerHTML = 
+        `<input class="inline-input end-input" type="time" value="${savedData.end}">`;
 
-    const repeatOptions = ["Weekly","Daily","Custom"];
-    let selectHTML = `<select class="inline-input repeat-input">`;
-    repeatOptions.forEach(opt=>{
-        selectHTML += `<option value="${opt}" ${originalRowData.repeat===opt?"selected":""}>${opt}</option>`;
+    const repeatOptions = ["Weekly", "Daily", "One-Time"];
+    let select = `<select class="inline-input repeat-input">`;
+    repeatOptions.forEach(opt => {
+        select += `<option value="${opt}" ${savedData.repeat === opt ? "selected" : ""}>${opt}</option>`;
     });
-    selectHTML += `</select>`;
-    tr.querySelector(".cell-repeat").innerHTML = selectHTML;
+    select += `</select>`;
+    row.querySelector(".cell-repeat").innerHTML = select;
 
-    const editCell = tr.querySelector(".edit-cell");
-    if(!editCell){
-        const td = document.createElement("td");
-        td.classList.add("edit-cell");
-        tr.appendChild(td);
+    const editCell = row.querySelector(".edit-cell");
+    if (!editCell) {
+        const newCell = document.createElement("td");
+        newCell.classList.add("edit-cell");
+        row.appendChild(newCell);
     }
-    tr.querySelector(".edit-cell").innerHTML = `
+    
+    row.querySelector(".edit-cell").innerHTML = `
         <div class="edit-actions-wrapper">
             <button class="btn save-btn">Save</button>
             <button class="btn cancel-btn">Cancel</button>
@@ -291,73 +392,88 @@ function enableInlineEditCommitment(tr) {
         <div class="inline-error" style="display:none;color:#c0392b;"></div>
     `;
 
-    tr.querySelector(".save-btn").onclick = () => saveInlineEditCommitment(tr);
-    tr.querySelector(".cancel-btn").onclick = () => cancelInlineEditCommitment(tr);
+    row.querySelector(".save-btn").onclick = () => saveCommitment(row);
+    row.querySelector(".cancel-btn").onclick = () => cancelCommitment(row);
 }
 
-function cancelInlineEditCommitment(tr){
-    Object.keys(originalRowData).forEach(f=>{
-        const cell = tr.querySelector(`.cell-${f}`);
-        if(cell) cell.textContent = originalRowData[f];
+function cancelCommitment(row) {
+    Object.keys(savedData).forEach(field => {
+        const cell = row.querySelector(`.cell-${field}`);
+        if (cell) cell.textContent = savedData[field];
     });
-    tr.classList.remove("editing");
-    tr.querySelector(".edit-cell").innerHTML = `<button class="btn edit-btn">Edit</button>`;
-    attachEditButtonCommitment(tr);
-    editingRow=null; originalRowData=null;
-}
-
-async function saveInlineEditCommitment(tr){
-    const errorBox = tr.querySelector(".inline-error");
-    const commitmentId = tr.dataset.id;
-
-    const name = tr.querySelector(".name-input")?.value.trim();
-    let date = tr.querySelector(".date-input")?.value;
-    const start_time = tr.querySelector(".start-input")?.value;
-    const end_time = tr.querySelector(".end-input")?.value;
-    const repeat_pattern = tr.querySelector(".repeat-input")?.value.trim();
-
-    if(!name || !date || !start_time || !end_time || !repeat_pattern) 
-        return showError(errorBox,"Fill all required fields");
     
-    const today = new Date().toISOString().split("T")[0];
-    const maxDate = '2030-12-31';
-    if(date < today) date = today;
-    if(date > maxDate) date = maxDate;
-
-    if(end_time <= start_time) return showError(errorBox,"End time must be after Start");
-
-    const payload = { id: commitmentId, name, day: date, start_time, end_time, repeat_pattern };
-    showError(errorBox,"Saving...", false);
-
-    try{
-        const resp = await fetch("/update_commitment", { method:"POST", body:ObjectToFormData(payload) });
-        const data = await resp.json();
-        if(!data || data.status!=="success") return showError(errorBox,data?.message||"Failed save");
-
-        tr.querySelector(".cell-name").textContent = name;
-        tr.querySelector(".cell-date").textContent = date;
-        tr.querySelector(".cell-start").textContent = start_time;
-        tr.querySelector(".cell-end").textContent = end_time;
-        tr.querySelector(".cell-repeat").textContent = repeat_pattern;
-
-        tr.classList.remove("editing");
-        tr.querySelector(".edit-cell").innerHTML = `<button class="btn edit-btn">Edit</button>`;
-        attachEditButtonCommitment(tr);
-        editingRow=null; originalRowData=null;
-    } catch(err){ console.error(err); showError(errorBox,"Error saving changes"); }
-}
-
-function attachEditButtonCommitment(tr){
-    const btn = tr.querySelector(".edit-btn");
-    if(!btn) return;
-    btn.onclick = () => enableInlineEditCommitment(tr);
-}
-
-// -------------------- DELETE BUTTONS OUTSIDE --------------------
-function attachDeleteButtonsOutside(tableId, type) {
-    const tableWrapper = document.getElementById(tableId).parentElement;
+    row.classList.remove("editing");
+    row.querySelector(".edit-cell").innerHTML = `<button class="btn edit-btn">Edit</button>`;
+    attachCommitmentEdit(row);
     
-    let container = tableWrapper.querySelector(".delete-buttons-container");
+    currentEdit = null;
+    savedData = null;
+}
+
+async function saveCommitment(row) {
+    const errBox = row.querySelector(".inline-error");
+    const id = row.dataset.id;
+
+    const name = row.querySelector(".name-input")?.value.trim();
+    const date = row.querySelector(".date-input")?.value;
+    const start = row.querySelector(".start-input")?.value;
+    const end = row.querySelector(".end-input")?.value;
+    const repeat = row.querySelector(".repeat-input")?.value.trim();
+
+    if (!name || !date || !start || !end || !repeat) 
+        return showErr(errBox, "Fill all required fields");
+
+    if (end <= start) 
+        return showErr(errBox, "End time must be after Start");
+
+    const data = { 
+        id: id, 
+        name: name, 
+        day: date, 
+        start_time: start, 
+        end_time: end, 
+        repeat_pattern: repeat 
+    };
+
+    try {
+        const res = await fetch("/update_commitment", { 
+            method: "POST", 
+            body: toFormData(data) 
+        });
+        const result = await res.json();
+        
+        if (!result || result.status !== "success") 
+            return showErr(errBox, result?.message || "Failed to save");
+
+        row.querySelector(".cell-name").textContent = name;
+        row.querySelector(".cell-date").textContent = date;
+        row.querySelector(".cell-start").textContent = start;
+        row.querySelector(".cell-end").textContent = end;
+        row.querySelector(".cell-repeat").textContent = repeat;
+
+        row.classList.remove("editing");
+        row.querySelector(".edit-cell").innerHTML = `<button class="btn edit-btn">Edit</button>`;
+        attachCommitmentEdit(row);
+        
+        currentEdit = null;
+        savedData = null;
+    } catch (error) {
+        console.error(error);
+        showErr(errBox, "Error saving changes");
+    }
+}
+
+function attachCommitmentEdit(row) {
+    const btn = row.querySelector(".edit-btn");
+    if (!btn) return;
+    btn.onclick = () => editCommitment(row);
+}
+
+// delete functionality
+function addDeleteBtns(tableId, type) {
+    const wrapper = document.getElementById(tableId).parentElement;
+    
+    let container = wrapper.querySelector(".delete-buttons-container");
     if (!container) {
         container = document.createElement("div");
         container.classList.add("delete-buttons-container");
@@ -365,82 +481,93 @@ function attachDeleteButtonsOutside(tableId, type) {
         container.style.left = "0";
         container.style.top = "0";
         container.style.pointerEvents = "none";
-        tableWrapper.appendChild(container);
+        wrapper.appendChild(container);
     }
     container.innerHTML = "";
 
     const rows = document.getElementById(tableId).querySelectorAll("tbody tr");
 
-    rows.forEach(tr => {
+    rows.forEach(row => {
         const btn = document.createElement("button");
         btn.classList.add("delete-x");
         btn.textContent = "❌";
-
         btn.style.pointerEvents = "auto";
-
         btn.style.position = "absolute";
         btn.style.left = "-30px";
-        btn.style.top = (tr.offsetTop + tr.offsetHeight / 2 - 12) + "px";
+        btn.style.top = (row.offsetTop + row.offsetHeight / 2 - 12) + "px";
 
         btn.onclick = async () => {
-            const id = tr.dataset.id;
-            if(!confirm("Are you sure you want to delete this record?")) return;
+            const id = row.dataset.id;
+            if (!confirm("Are you sure you want to delete this record?")) return;
 
             try {
-                const endpointMap = {
+                const endpoints = {
                     subject: "/delete_subject",
                     availability: "/delete_availability",
                     commitment: "/delete_commitment"
                 };
-                const resp = await fetch(endpointMap[type], {
+                
+                const res = await fetch(endpoints[type], {
                     method: "POST",
-                    body: ObjectToFormData({id})
+                    body: toFormData({ id: id })
                 });
-                const data = await resp.json();
-                if(!data || data.status!=="success"){ alert(data?.message||"Failed"); return; }
+                const result = await res.json();
+                
+                if (!result || result.status !== "success") {
+                    alert(result?.message || "Failed to delete");
+                    return;
+                }
 
-                tr.remove();
+                row.remove();
                 btn.remove();
-                updateDeleteButtonsPosition(tableId);
-            } catch(err){ console.error(err); alert("Error deleting record"); }
+                updateDeleteBtns(tableId);
+            } catch (error) {
+                console.error(error);
+                alert("Error deleting record");
+            }
         };
 
         container.appendChild(btn);
     });
 
-    window.addEventListener("resize", () => updateDeleteButtonsPosition(tableId));
+    window.addEventListener("resize", () => updateDeleteBtns(tableId));
 }
 
-function updateDeleteButtonsPosition(tableId){
-    const tableWrapper = document.getElementById(tableId).parentElement;
-    const container = tableWrapper.querySelector(".delete-buttons-container");
-    if(!container) return;
+function updateDeleteBtns(tableId) {
+    const wrapper = document.getElementById(tableId).parentElement;
+    const container = wrapper.querySelector(".delete-buttons-container");
+    if (!container) return;
 
     const rows = document.getElementById(tableId).querySelectorAll("tbody tr");
-    const buttons = container.querySelectorAll("button.delete-x");
+    const btns = container.querySelectorAll("button.delete-x");
 
-    rows.forEach((tr, i) => {
-        if(buttons[i]){
-            buttons[i].style.top = (tr.offsetTop + tr.offsetHeight / 2 - 12) + "px";
+    rows.forEach((row, i) => {
+        if (btns[i]) {
+            btns[i].style.top = (row.offsetTop + row.offsetHeight / 2 - 12) + "px";
         }
     });
 }
 
-// -------------------- INIT --------------------
-document.addEventListener("DOMContentLoaded", ()=>{
-    attachDeleteButtonsOutside("subjects-table","subject");
-    attachDeleteButtonsOutside("availability-table","availability");
-    attachDeleteButtonsOutside("commitments-table","commitment");
+// initialize everything
+document.addEventListener("DOMContentLoaded", () => {
+    addDeleteBtns("subjects-table", "subject");
+    addDeleteBtns("availability-table", "availability");
+    addDeleteBtns("commitments-table", "commitment");
 
-    document.querySelectorAll("#commitments-table tbody tr").forEach(tr=>{
-        if(!tr.querySelector(".edit-cell")){
-            const td = document.createElement("td");
-            td.classList.add("edit-cell");
-            tr.appendChild(td);
+    document.querySelectorAll("#commitments-table tbody tr").forEach(row => {
+        if (!row.querySelector(".edit-cell")) {
+            const cell = document.createElement("td");
+            cell.classList.add("edit-cell");
+            row.appendChild(cell);
         }
-        attachEditButtonCommitment(tr);
+        attachCommitmentEdit(row);
     });
 
-    document.querySelectorAll("#subjects-table tbody tr").forEach(tr=>attachEditButtonSubject(tr));
-    document.querySelectorAll("#availability-table tbody tr").forEach(tr=>attachEditButtonAvailability(tr));
+    document.querySelectorAll("#subjects-table tbody tr").forEach(row => 
+        attachSubjectEdit(row)
+    );
+
+    document.querySelectorAll("#availability-table tbody tr").forEach(row => 
+        attachAvailabilityEdit(row)
+    );
 });

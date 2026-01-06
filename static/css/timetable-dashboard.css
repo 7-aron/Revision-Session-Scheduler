@@ -112,7 +112,7 @@ body {
     padding: 1.5rem;
     border-radius: 12px;
     box-shadow: 0 2px 6px rgba(0,0,0,0.05);
-    overflow-x: hidden;
+    overflow-x: auto;
 }
 
 .timetable {
@@ -127,12 +127,19 @@ body {
     border: 1px solid #ddd;
     padding: 0.6rem;
     word-wrap: break-word;
+    height: 50px; /* Fixed height for each hour slot */
+    min-height: 50px;
+}
+
+.timetable tbody tr {
+    height: 50px; /* Ensure rows are consistently 50px tall */
 }
 
 .timetable th {
     background-color: #f0f2ff;
     font-weight: 700;
     font-size: 1rem;
+    height: auto; /* Header can be flexible */
 }
 
 .timetable td.time {
@@ -189,37 +196,13 @@ body {
     background-color: #d0eaff;
     border: 1px solid #004a7c;
     border-radius: 4px;
-    padding: 2px;
-    font-size: 12px;
+    padding: 4px;
+    font-size: 0.85rem;
     text-align: center;
     box-sizing: border-box;
     overflow: hidden;
-    pointer-events: auto; /* optional: allows hover/click if needed */
+    pointer-events: auto;
     z-index: 5;
-    white-space: nowrap;
-}
-
-
-/* ===== See Earlier / See Later Buttons ===== */
-.see-btn {
-    background-color: #f0f2ff;
-    color: #5a6eff;
-    cursor: pointer;
-    font-weight: 600;
-    text-align: center;
-    transition: background 0.2s ease-in-out, color 0.2s ease-in-out;
-    user-select: none;
-    padding: 0.7rem;
-}
-
-.see-btn:hover {
-    background-color: #e6e9ff;
-    color: #3c52e3;
-}
-
-/* Animate table height change */
-.table-wrapper {
-    transition: max-height 0.4s ease-in-out;
 }
 
 /* ===== Mobile Adjustments ===== */
@@ -232,7 +215,9 @@ body {
 
     .daily-nav {display: flex; justify-content: center; gap: 1.5rem; margin-bottom: 1rem;}
 
-    .table-wrapper {padding: 1rem;}
+    .table-wrapper {
+        padding: 1rem;
+    }
 
     .timetable {
         table-layout: fixed;
@@ -242,8 +227,14 @@ body {
     /* All cells display as table-cell */
     .timetable th, .timetable td {
         display: table-cell;
-        font-size: 0.85rem;
-        padding: 0.5rem;
+        font-size: 0.75rem;
+        padding: 0.4rem;
+        height: 40px; /* Slightly smaller on mobile */
+        min-height: 40px;
+    }
+
+    .timetable tbody tr {
+        height: 40px;
     }
 
     /* Force visible columns (Time + Current Day) to 50% each */
@@ -259,5 +250,10 @@ body {
     .timetable th:not(:first-child):not(.visible-day),
     .timetable td:not(:first-child):not(.visible-day) {
         display: none;
+    }
+
+    .session-block {
+        font-size: 0.7rem;
+        padding: 2px;
     }
 }

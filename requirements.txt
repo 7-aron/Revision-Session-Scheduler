@@ -1,4 +1,0 @@
-app.py           # your Flask app
-requirements.txt # list dependencies
-Procfile         # tells Render how to start your app
-runtime.txt      # optional, specify Python version

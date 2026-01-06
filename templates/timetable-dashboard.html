@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Timetable Dashboard | Smart Revision Scheduler</title>
-<link rel="stylesheet" href="{{ url_for('static', filename='css/timetable-dashboard.css') }}">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Timetable Dashboard | Smart Revision Scheduler</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/timetable-dashboard.css') }}">
 </head>
 <body>
 
@@ -13,67 +13,62 @@
         <a href="{{ url_for('help_page') }}" class="help" id="help-link">Help</a>
     </header>
 
-<main class="main">
-    <h2 class="page-title">Timetable Dashboard</h2>
-    <p class="subtitle">View, regenerate, or export your revision timetable.</p>
+    <main class="main">
+        <h2 class="page-title">Timetable Dashboard</h2>
+        <p class="subtitle">View, regenerate, or export your revision timetable.</p>
 
-    <!-- Week Controls -->
-    <div class="week-controls">
-        <button class="week-btn" id="week-left">&#8249;</button>
-        <span class="week-range" id="week-range">13th – 19th October 2025</span>
-        <button class="week-btn" id="week-right">&#8250;</button>
-    </div>
-
-    <!-- Daily Navigation (Mobile Only) -->
-    <div class="daily-nav" id="daily-nav">
-        <button class="btn blue" id="daily-left">&#8249;</button>
-        <span id="mobile-current-day">Monday</span>
-        <button class="btn blue" id="daily-right">&#8250;</button>
-    </div>
-
-    <!-- Timetable Grid -->
-    <section class="timetable-section">
-        <div class="table-wrapper" id="table-wrapper" style="position: relative; overflow: visible;">
-            
-            <!-- Overlay for session blocks -->
-            <div id="session-blocks-container" style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:10;"></div>
-
-            <!-- Grid table -->
-            <table class="timetable" id="timetable">
-                <thead>
-                    <tr>
-                        <th id="see-earlier" class="see-btn">See Earlier</th>
-                        <th class="day-header">Monday</th>
-                        <th class="day-header">Tuesday</th>
-                        <th class="day-header">Wednesday</th>
-                        <th class="day-header">Thursday</th>
-                        <th class="day-header">Friday</th>
-                        <th class="day-header">Saturday</th>
-                        <th class="day-header">Sunday</th>
-                    </tr>
-                </thead>
-                <tbody id="timetable-body"></tbody>
-                <tfoot>
-                    <tr>
-                        <td id="see-later" class="see-btn">See Later</td>
-                        <td colspan="7"></td>
-                    </tr>
-                </tfoot>
-            </table>
+        <!-- Week Controls -->
+        <div class="week-controls">
+            <button class="week-btn" id="week-left">&#8249;</button>
+            <span class="week-range" id="week-range">13th – 19th October 2025</span>
+            <button class="week-btn" id="week-right">&#8250;</button>
         </div>
-    </section>
 
-    <!-- Action Buttons -->
-    <div class="action-buttons">
-        <button id="regenerate-btn" class="btn blue">Regenerate Timetable</button>
-    </div>
-</main>
+        <!-- Mobile Daily Navigation (visible only on mobile) -->
+        <div class="daily-nav" id="daily-nav">
+            <button class="week-btn" id="daily-left">&#8249;</button>
+            <span class="week-range" id="mobile-current-day">Monday 13</span>
+            <button class="week-btn" id="daily-right">&#8250;</button>
+        </div>
 
-<footer class="footer">
-    <p id="footer-title">Smart Revision Scheduler</p>
-</footer>
+        <!-- Timetable Grid -->
+        <section class="timetable-section">
+            <div class="table-wrapper" id="table-wrapper" style="position: relative; overflow: visible;">
+                
+                <!-- Overlay for session blocks -->
+                <div id="session-blocks-container" style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:10;"></div>
 
-<script src="{{ url_for('static', filename='js/timetable-dashboard.js') }}"></script>
+                <!-- Grid table -->
+                <table class="timetable" id="timetable">
+                    <thead>
+                        <tr>
+                            <th>Time</th>
+                            <th class="day-header">Monday</th>
+                            <th class="day-header">Tuesday</th>
+                            <th class="day-header">Wednesday</th>
+                            <th class="day-header">Thursday</th>
+                            <th class="day-header">Friday</th>
+                            <th class="day-header">Saturday</th>
+                            <th class="day-header">Sunday</th>
+                        </tr>
+                    </thead>
+                    <tbody id="timetable-body"></tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Action Buttons -->
+        <div class="action-buttons">
+            <button id="regenerate-btn" class="btn blue">Regenerate Timetable</button>
+            <button id="export-btn" class="btn grey">Export Timetable</button>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <p id="footer-title">Smart Revision Scheduler</p>
+    </footer>
+
+    <script src="{{ url_for('static', filename='js/timetable-dashboard.js') }}"></script>
 
 </body>
 </html>
