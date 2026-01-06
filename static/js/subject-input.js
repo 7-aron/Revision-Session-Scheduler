@@ -1,30 +1,41 @@
-// ================= Navigation =================
-const routes = {
-    home: "/home",
-    help: "/help",
-    summary: "/summary-review"
+// ==================== NAVIGATION ROUTES ====================
+const navigationRoutes = {
+    homePage: "/home",
+    helpPage: "/help",
+    summaryPage: "/summary-review"
 };
 
-document.getElementById('home-title').onclick = () => location.href = routes.home;
-document.getElementById('help-link').onclick = () => location.href = routes.help;
-document.getElementById('footer-title').onclick = () => location.href = routes.home;
-document.getElementById('save-continue').onclick = () => location.href = routes.summary;
+// Navigation button handlers
+document.getElementById('home-title').onclick = () => location.href = navigationRoutes.homePage;
+document.getElementById('help-link').onclick = () => location.href = navigationRoutes.helpPage;
+document.getElementById('footer-title').onclick = () => location.href = navigationRoutes.homePage;
+document.getElementById('save-continue').onclick = () => location.href = navigationRoutes.summaryPage;
 
-// ================= Multi-select Dropdown =================
-const dropdown = document.getElementById('daysDropdown');
-const display = dropdown.querySelector('.multi-select-display');
-const options = dropdown.querySelector('.multi-select-options');
+// ==================== MULTI-SELECT DAY DROPDOWN ====================
+const daySelectionDropdown = document.getElementById('daysDropdown');
+const dropdownDisplay = daySelectionDropdown.querySelector('.multi-select-display');
+const dropdownOptions = daySelectionDropdown.querySelector('.multi-select-options');
 
-dropdown.addEventListener('click', e => dropdown.classList.toggle('active'));
-options.addEventListener('click', e => {
-    e.stopPropagation();
-    updateSelectedDays();
+// Toggle dropdown visibility on click
+daySelectionDropdown.addEventListener('click', event => {
+    daySelectionDropdown.classList.toggle('active');
 });
 
-function updateSelectedDays() {
-    const selected = Array.from(dropdown.querySelectorAll('input:checked')).map(cb => cb.value);
-    display.textContent = selected.length ? selected.join(', ') : 'Select days...';
-    display.classList.toggle('selected', selected.length > 0);
+// Update selected days when options are clicked
+dropdownOptions.addEventListener('click', event => {
+    event.stopPropagation();
+    updateSelectedDaysDisplay();
+});
+
+function updateSelectedDaysDisplay() {
+    const selectedDaysList = Array.from(daySelectionDropdown.querySelectorAll('input:checked'))
+        .map(checkbox => checkbox.value);
+    
+    dropdownDisplay.textContent = selectedDaysList.length 
+        ? selectedDaysList.join(', ') 
+        : 'Select days...';
+    
+    dropdownDisplay.classList.toggle('selected', selectedDaysList.length > 0);
 }
 
 document.addEventListener('click', e => {
