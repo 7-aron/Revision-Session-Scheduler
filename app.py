@@ -12,7 +12,8 @@ MAX_DATE = '2030-12-31'
 # ------------------- DATABASE HELPERS -------------------
 
 def get_db_connection():
-    DATABASE_URL = os.environ.get("postgresql://postgres:UwjUUVDbReXIbNPoHOFfPsPPmijBllup@postgres.railway.internal:5432/railway")
+    DATABASE_URL = os.environ.get("DATABASE_URL") or "postgresql://postgres:UwjUUVDbReXIbNPoHOFfPsPPmijBllup@postgres.railway.internal:5432/railway"
+
     conn = psycopg2.connect(DATABASE_URL, cursor_factory=psycopg2.extras.RealDictCursor)
     return conn
 
