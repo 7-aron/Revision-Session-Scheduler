@@ -1,22 +1,19 @@
 from flask import Flask, render_template, request, jsonify
-import psycopg2
-import psycopg2.extras
-import os
+import sqlite3
 from datetime import datetime
 from main_algo import generate_timetable
 
 app = Flask(__name__)
 
+DB_PATH = "database.db"
 MAX_DATE = '2030-12-31'
 
 # ------------------- DATABASE HELPERS -------------------
 
 def get_db_connection():
-    DATABASE_URL = os.environ.get("DATABASE_URL") or "postgresql://postgres:UwjUUVDbReXIbNPoHOFfPsPPmijBllup@postgres.railway.internal:5432/railway"
-
-    conn = psycopg2.connect(DATABASE_URL, cursor_factory=psycopg2.extras.RealDictCursor)
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
     return conn
-
 
 def init_db():
     with get_db_connection() as conn:
@@ -25,7 +22,7 @@ def init_db():
         # Create tables if they don't exist
         cur.execute('''
             CREATE TABLE IF NOT EXISTS subjects (
-                id SERIAL,
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
                 name TEXT NOT NULL,
                 exam_date TEXT NOT NULL,
                 confidence TEXT NOT NULL,
@@ -35,7 +32,7 @@ def init_db():
 
         cur.execute('''
             CREATE TABLE IF NOT EXISTS availability (
-                id SERIAL,
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
                 day TEXT NOT NULL,
                 start_time TEXT NOT NULL,
                 end_time TEXT NOT NULL
@@ -44,7 +41,7 @@ def init_db():
 
         cur.execute('''
             CREATE TABLE IF NOT EXISTS commitments (
-                id SERIAL,
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
                 day TEXT NOT NULL,
                 name TEXT NOT NULL,
                 start_time TEXT NOT NULL,
@@ -55,7 +52,7 @@ def init_db():
 
         cur.execute("""
             CREATE TABLE IF NOT EXISTS revision_sessions (
-                id SERIAL,
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
                 subject_id INTEGER NOT NULL,
                 date TEXT NOT NULL,
                 start_time TEXT NOT NULL,
@@ -69,13 +66,13 @@ def init_db():
         for row in availability_rows:
             if ',' in row['day']:
                 days = [d.strip() for d in row['day'].split(',')]
-                cur.execute("DELETE FROM availability WHERE id = %s", (row['id'],))
+                cur.execute("DELETE FROM availability WHERE id = ?", (row['id'],))
                 for day in days:
                     # Prevent duplicates
-                    exists = cur.execute("SELECT id FROM availability WHERE day=%s AND start_time=%s AND end_time=%s", 
+                    exists = cur.execute("SELECT id FROM availability WHERE day=? AND start_time=? AND end_time=?", 
                                          (day, row['start_time'], row['end_time'])).fetchone()
                     if not exists:
-                        cur.execute("INSERT INTO availability (day, start_time, end_time) VALUES (%s, %s, %s)",
+                        cur.execute("INSERT INTO availability (day, start_time, end_time) VALUES (?, ?, ?)",
                                     (day, row['start_time'], row['end_time']))
         conn.commit()
 
@@ -95,7 +92,7 @@ def subject_input():
     subject = None
     if edit_id:
         with get_db_connection() as conn:
-            subject = conn.execute("SELECT * FROM subjects WHERE id = %s", (edit_id,)).fetchone()
+            subject = conn.execute("SELECT * FROM subjects WHERE id = ?", (edit_id,)).fetchone()
     return render_template("subject-input.html", subject=subject)
 
 # ------------------- SUBJECT ROUTES -------------------
@@ -125,9 +122,9 @@ def add_subject():
 
         # Check for duplicate subject (ignore current id if updating)
         if subject_id:
-            cur.execute("SELECT id FROM subjects WHERE LOWER(name)=%s AND id != %s", (name_norm, subject_id))
+            cur.execute("SELECT id FROM subjects WHERE LOWER(name)=? AND id != ?", (name_norm, subject_id))
         else:
-            cur.execute("SELECT id FROM subjects WHERE LOWER(name)=%s", (name_norm,))
+            cur.execute("SELECT id FROM subjects WHERE LOWER(name)=?", (name_norm,))
         if cur.fetchone():
             return jsonify({
                 "status": "error",
@@ -137,13 +134,13 @@ def add_subject():
         if subject_id:
             cur.execute("""
                 UPDATE subjects
-                SET name=%s, exam_date=%s, confidence=%s, notes=%s
-                WHERE id=%s
+                SET name=?, exam_date=?, confidence=?, notes=?
+                WHERE id=?
             """, (name, exam_date, confidence, notes, subject_id))
         else:
             cur.execute("""
                 INSERT INTO subjects (name, exam_date, confidence, notes)
-                VALUES (%s, %s, %s, %s)
+                VALUES (?, ?, ?, ?)
             """, (name, exam_date, confidence, notes))
         conn.commit()
 
@@ -177,12 +174,12 @@ def update_subject():
         cur = conn.cursor()
         
         # Check if subject exists
-        cur.execute("SELECT id FROM subjects WHERE id = %s", (subject_id,))
+        cur.execute("SELECT id FROM subjects WHERE id = ?", (subject_id,))
         if not cur.fetchone():
             return jsonify({"status": "error", "message": "Subject not found"}), 404
         
         # Check for duplicate subject name (excluding current subject)
-        cur.execute("SELECT id FROM subjects WHERE LOWER(name)=%s AND id != %s", (name_norm, subject_id))
+        cur.execute("SELECT id FROM subjects WHERE LOWER(name)=? AND id != ?", (name_norm, subject_id))
         if cur.fetchone():
             return jsonify({
                 "status": "error",
@@ -191,8 +188,8 @@ def update_subject():
 
         cur.execute("""
             UPDATE subjects
-            SET name=%s, exam_date=%s, confidence=%s, notes=%s
-            WHERE id=%s
+            SET name=?, exam_date=?, confidence=?, notes=?
+            WHERE id=?
         """, (name, exam_date, confidence, notes, subject_id))
         conn.commit()
 
@@ -229,7 +226,7 @@ def add_availability():
         
         # Check if any of the days already have availability
         for day in day_list:
-            existing = cur.execute("SELECT * FROM availability WHERE day = %s", (day,)).fetchone()
+            existing = cur.execute("SELECT * FROM availability WHERE day = ?", (day,)).fetchone()
             if existing:
                 return jsonify({
                     "status": "error",
@@ -238,7 +235,7 @@ def add_availability():
         
         # Insert availability for each day
         for day in day_list:
-            cur.execute("INSERT INTO availability (day, start_time, end_time) VALUES (%s, %s, %s)",
+            cur.execute("INSERT INTO availability (day, start_time, end_time) VALUES (?, ?, ?)",
                         (day, start_time, end_time))
         conn.commit()
     return jsonify({"status": "success"}), 200
@@ -264,13 +261,13 @@ def update_availability():
 
     with get_db_connection() as conn:
         cur = conn.cursor()
-        cur.execute("SELECT id FROM availability WHERE id = %s", (slot_id,))
+        cur.execute("SELECT id FROM availability WHERE id = ?", (slot_id,))
         if not cur.fetchone():
             return jsonify({"status": "error", "message": "Availability slot not found"}), 404
 
         new_start = time_to_minutes(start_time)
         new_end = time_to_minutes(end_time)
-        existing = cur.execute("SELECT * FROM availability WHERE day = %s AND id != %s", (day, slot_id)).fetchall()
+        existing = cur.execute("SELECT * FROM availability WHERE day = ? AND id != ?", (day, slot_id)).fetchall()
         for a in existing:
             a_start = time_to_minutes(a["start_time"])
             a_end = time_to_minutes(a["end_time"])
@@ -282,8 +279,8 @@ def update_availability():
 
         cur.execute("""
             UPDATE availability
-            SET start_time=%s, end_time=%s, day=%s
-            WHERE id=%s
+            SET start_time=?, end_time=?, day=?
+            WHERE id=?
         """, (start_time, end_time, day, slot_id))
         conn.commit()
     return jsonify({"status": "success"}), 200
@@ -319,7 +316,7 @@ def add_commitment():
 
     with get_db_connection() as conn:
         cur = conn.cursor()
-        existing = cur.execute("SELECT * FROM commitments WHERE day = %s", (day,)).fetchall()
+        existing = cur.execute("SELECT * FROM commitments WHERE day = ?", (day,)).fetchall()
         for c in existing:
             c_start = time_to_minutes(c["start_time"])
             c_end = time_to_minutes(c["end_time"])
@@ -331,7 +328,7 @@ def add_commitment():
 
         cur.execute("""
             INSERT INTO commitments (name, day, start_time, end_time, repeat_pattern)
-            VALUES (%s, %s, %s, %s, %s)
+            VALUES (?, ?, ?, ?, ?)
         """, (name, day, start_time, end_time, repeat_pattern))
         conn.commit()
     return jsonify({"status": "success"}), 200
@@ -356,12 +353,12 @@ def update_commitment():
 
     with get_db_connection() as conn:
         cur = conn.cursor()
-        cur.execute("SELECT id FROM commitments WHERE id = %s", (commitment_id,))
+        cur.execute("SELECT id FROM commitments WHERE id = ?", (commitment_id,))
         if not cur.fetchone():
             return jsonify({"status": "error", "message": "Commitment not found"}), 404
 
         # Check overlaps with other commitments
-        existing = cur.execute("SELECT * FROM commitments WHERE day = %s AND id != %s", (day, commitment_id)).fetchall()
+        existing = cur.execute("SELECT * FROM commitments WHERE day = ? AND id != ?", (day, commitment_id)).fetchall()
         for c in existing:
             c_start = time_to_minutes(c["start_time"])
             c_end = time_to_minutes(c["end_time"])
@@ -373,8 +370,8 @@ def update_commitment():
 
         cur.execute("""
             UPDATE commitments
-            SET name=%s, day=%s, start_time=%s, end_time=%s, repeat_pattern=%s
-            WHERE id=%s
+            SET name=?, day=?, start_time=?, end_time=?, repeat_pattern=?
+            WHERE id=?
         """, (name, day, start_time, end_time, repeat_pattern, commitment_id))
         conn.commit()
     return jsonify({"status": "success"}), 200
@@ -407,10 +404,10 @@ def delete_subject():
 
     with get_db_connection() as conn:
         cur = conn.cursor()
-        cur.execute("SELECT id FROM subjects WHERE id = %s", (subject_id,))
+        cur.execute("SELECT id FROM subjects WHERE id = ?", (subject_id,))
         if not cur.fetchone():
             return jsonify({"status": "error", "message": "Subject not found"}), 404
-        cur.execute("DELETE FROM subjects WHERE id = %s", (subject_id,))
+        cur.execute("DELETE FROM subjects WHERE id = ?", (subject_id,))
         conn.commit()
     return jsonify({"status": "success"}), 200
 
@@ -422,10 +419,10 @@ def delete_availability():
 
     with get_db_connection() as conn:
         cur = conn.cursor()
-        cur.execute("SELECT id FROM availability WHERE id = %s", (slot_id,))
+        cur.execute("SELECT id FROM availability WHERE id = ?", (slot_id,))
         if not cur.fetchone():
             return jsonify({"status": "error", "message": "Availability slot not found"}), 404
-        cur.execute("DELETE FROM availability WHERE id = %s", (slot_id,))
+        cur.execute("DELETE FROM availability WHERE id = ?", (slot_id,))
         conn.commit()
     return jsonify({"status": "success"}), 200
 
@@ -437,10 +434,10 @@ def delete_commitment():
 
     with get_db_connection() as conn:
         cur = conn.cursor()
-        cur.execute("SELECT id FROM commitments WHERE id = %s", (commitment_id,))
+        cur.execute("SELECT id FROM commitments WHERE id = ?", (commitment_id,))
         if not cur.fetchone():
             return jsonify({"status": "error", "message": "Commitment not found"}), 404
-        cur.execute("DELETE FROM commitments WHERE id = %s", (commitment_id,))
+        cur.execute("DELETE FROM commitments WHERE id = ?", (commitment_id,))
         conn.commit()
     return jsonify({"status": "success"}), 200
 
@@ -476,7 +473,7 @@ def generate_timetable_route():
                         subject_id = subject_map[session_name]
                         cur.execute("""
                             INSERT INTO revision_sessions (subject_id, date, start_time, end_time)
-                            VALUES (%s, %s, %s, %s)
+                            VALUES (?, ?, ?, ?)
                         """, (subject_id, date_str, start_time, end_time))
             
             conn.commit()
@@ -526,7 +523,7 @@ def get_revision_sessions():
                     SELECT rs.*, s.name as subject_name, s.notes as subject_notes
                     FROM revision_sessions rs
                     JOIN subjects s ON rs.subject_id = s.id
-                    WHERE rs.date BETWEEN %s AND %s
+                    WHERE rs.date BETWEEN ? AND ?
                     ORDER BY rs.date, rs.start_time
                 """, (start_date, end_date)).fetchall()
             else:
