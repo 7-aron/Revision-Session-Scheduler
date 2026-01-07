@@ -33,7 +33,8 @@ def minutes_to_time(minutes):
 
 def calculate_priorities(subjects, today):
     """
-    Calculate weighted priority: priority = (3 × proximity_score) + (2 × confidence_score)
+    Calculate a simple base priority using proximity only.
+    Confidence is handled separately during allocation for clarity and balance.
     """
     subject_list = []
     
@@ -41,17 +42,19 @@ def calculate_priorities(subjects, today):
         exam_date = datetime.strptime(s['exam_date'], "%Y-%m-%d").date()
         days_to_exam = max((exam_date - today).days, 0)
         
+        # Proximity: closer exams get larger values
         proximity_score = 1.0 / (days_to_exam + 1)
-        confidence_map = {'low': 3, 'medium': 2, 'high': 1}
-        confidence_score = confidence_map.get(s['confidence'].lower(), 2)
+        confidence_label = (s['confidence'] or '').lower()
         
-        priority = (3 * proximity_score) + (2 * confidence_score)
+        # Use proximity only as the base; keep confidence separate for allocation
+        priority = proximity_score
         
         subject_list.append({
             'id': s['id'],
             'name': s['name'],
             'priority': priority,
             'exam_date': exam_date,
+            'confidence': confidence_label,
             'sessions_needed': 0
         })
     
@@ -147,40 +150,99 @@ def generate_slots(availability, commitments, start_date, end_date):
 # STAGE 3: PROPORTIONAL SESSION ALLOCATION
 # ============================================================================
 
-def allocate_sessions(subjects, total_slots):
+def allocate_sessions(subjects, total_slots, conf_allocation_multipliers=None):
     """
-    Distribute sessions proportionally by priority.
-    Each subject gets: (subject_priority / total_priority) × total_slots
-    Minimum: 1 session per subject
+    Distribute sessions proportionally (largest remainder method).
+    Tie-breakers favor nearer exams, then higher base priority.
     """
-    total_priority = sum(s['priority'] for s in subjects)
-    
-    if total_priority == 0:
-        per_subject = total_slots // len(subjects)
+    # Stronger emphasis on confidence to widen gaps between levels
+    if conf_allocation_multipliers is None:
+        # Symmetric geometric ratio so gaps low↔medium and medium↔high are similar
+        CONF_RATIO = 1.35
+        conf_allocation_multipliers = {
+            'low': CONF_RATIO,
+            'medium': 1.0,
+            'high': 1.0 / CONF_RATIO
+        }
+    if total_slots <= 0 or not subjects:
         for s in subjects:
-            s['sessions_needed'] = per_subject
-    else:
-        allocated = 0
-        for i, s in enumerate(subjects):
-            if i == len(subjects) - 1:
-                # Last subject gets remainder
-                s['sessions_needed'] = total_slots - allocated
-            else:
-                sessions = int((s['priority'] / total_priority) * total_slots)
-                s['sessions_needed'] = max(1, sessions)
-                allocated += s['sessions_needed']
+            s['sessions_needed'] = 0
+        return
+    
+    # Apply confidence multipliers to amplify differences in allocation
+    def effective_priority(s):
+        mult = conf_allocation_multipliers.get(s.get('confidence', 'medium'), 1.0)
+        return max(0.0, s['priority']) * mult
+    
+    total_priority = sum(effective_priority(s) for s in subjects)
+    
+    if total_priority <= 0:
+        # Fallback: allocate greedily to soonest exams
+        subjects_sorted = sorted(subjects, key=lambda s: (s['exam_date'], -s['priority']))
+        for s in subjects:
+            s['sessions_needed'] = 0
+        for i in range(total_slots):
+            subjects_sorted[i % len(subjects_sorted)]['sessions_needed'] += 1
+        return
+    
+    # Initial floor allocation and remainders
+    shares = []
+    allocated = 0
+    for s in subjects:
+        p = effective_priority(s)
+        exact = (p / total_priority) * total_slots
+        base = int(exact)
+        remainder = exact - base
+        shares.append((s, base, remainder))
+        allocated += base
+    
+    # Assign the remaining slots based on largest remainders.
+    # Simple tie-break: earlier exam first, then name for stability.
+    remaining = total_slots - allocated
+    shares.sort(
+        key=lambda x: (
+            -x[2],  # remainder desc
+            x[0]['exam_date'],  # earlier exam first
+            x[0]['name'].lower(),
+        )
+    )
+    
+    for s, base, _ in shares:
+        s['sessions_needed'] = base
+    
+    # Distribute remaining sessions in the same preference order
+    if remaining > 0:
+        tie_break_sorted = sorted(
+            shares,
+            key=lambda x: (
+                -x[2],
+                x[0]['exam_date'],
+                x[0]['name'].lower(),
+            )
+        )
+        idx = 0
+        while remaining > 0 and tie_break_sorted:
+            subj = tie_break_sorted[idx % len(tie_break_sorted)][0]
+            subj['sessions_needed'] += 1
+            idx += 1
+            remaining -= 1
 
 
 # ============================================================================
-# STAGE 4, 5 & 6: GREEDY PLACEMENT + BREAK ENFORCEMENT + RANDOMIZATION
+# STAGE 4, 5 & 6: WEIGHTED PLACEMENT + NO-OVERLAP + RANDOMIZATION
 # ============================================================================
 
-def schedule_sessions(subjects, all_slots):
+def schedule_sessions(subjects, all_slots, randomize=True, break_minutes=30):
     """
-    Priority-biased round-robin scheduling with 30-minute break enforcement.
-    Cycles through subjects in priority order, enforcing gaps between sessions.
+    Simple scheduling:
+    - One session per discrete slot (no overlap between revision sessions)
+    - Only schedule up to subject['sessions_needed'] and not after exam date
+    - Randomization via weighted random pick per slot (by remaining sessions)
+    - Enforce breaks after each revision session by reserving a cooldown window.
+      Breaks are added as explicit entries and never overlap commitments
+      because slots are pre-filtered against commitments.
     """
-    # Group slots by day, sort within each day, then shuffle subject order
+    # Group slots by day and sort chronologically for a clean timetable
     slots_by_day = {}
     for slot in all_slots:
         date_str = slot['date'].strftime("%Y-%m-%d")
@@ -188,7 +250,7 @@ def schedule_sessions(subjects, all_slots):
             slots_by_day[date_str] = []
         slots_by_day[date_str].append(slot)
     
-    # Sort slots within each day by time (for break enforcement)
+    # Sort slots within each day by time
     for day_slots in slots_by_day.values():
         day_slots.sort(key=lambda x: x['start_mins'])
     
@@ -198,74 +260,74 @@ def schedule_sessions(subjects, all_slots):
         sorted_slots.extend(slots_by_day[date_str])
     
     subjects_to_schedule = [s for s in subjects if s['sessions_needed'] > 0]
-    
-    # RANDOMIZATION: Shuffle subject order (not slot order)
-    random.shuffle(subjects_to_schedule)
-    
-    if len(subjects_to_schedule) == 0:
+    if not subjects_to_schedule:
         return {}
     
-    all_slots = sorted_slots  # Use the sorted slots
+    # Helper: weighted choice by remaining sessions per slot
+    def pick_subject(candidates):
+        weights = []
+        for s in candidates:
+            weight = max(0, s['sessions_needed'])
+            weights.append(weight)
+        total_w = sum(weights)
+        if total_w <= 0:
+            # Fallback: deterministic - nearest exam
+            return sorted(candidates, key=lambda s: s['exam_date'])[0]
+        if not randomize:
+            # Deterministic: pick the highest weight
+            best_idx = max(range(len(candidates)), key=lambda i: weights[i])
+            return candidates[best_idx]
+        # Roulette wheel selection
+        r = random.uniform(0, total_w)
+        upto = 0.0
+        for s, w in zip(candidates, weights):
+            upto += w
+            if upto >= r:
+                return s
+        return candidates[-1]
     
+    all_slots = sorted_slots
     timetable = {}
-    last_session_end = {}  # Track end time of last session per day
-    subject_index = 0
-    
+    cooldown_until_by_day = {}
     for slot in all_slots:
-        if len(subjects_to_schedule) == 0:
+        if not subjects_to_schedule:
             break
         
         date_str = slot['date'].strftime("%Y-%m-%d")
         if date_str not in timetable:
             timetable[date_str] = []
-            last_session_end[date_str] = 0
+            cooldown_until_by_day[date_str] = 0
         
-        # Try to schedule subjects (round-robin)
-        attempts = 0
-        scheduled = False
+        # If we're still within cooldown, emit a break block and skip scheduling a session
+        if break_minutes and slot['start_mins'] < cooldown_until_by_day[date_str]:
+            break_end = min(slot['end_mins'], cooldown_until_by_day[date_str])
+            timetable[date_str].append({
+                'subject': '[BREAK]',
+                'start': minutes_to_time(slot['start_mins']),
+                'end': minutes_to_time(break_end)
+            })
+            # Do not schedule a revision in this slot
+            continue
         
-        while attempts < len(subjects_to_schedule) and not scheduled:
-            subject = subjects_to_schedule[subject_index]
-            
-            # Check 1: Sessions remaining?
-            if subject['sessions_needed'] <= 0:
-                subject_index = (subject_index + 1) % len(subjects_to_schedule)
-                attempts += 1
-                continue
-            
-            # Check 2: Before exam date?
-            if slot['date'] > subject['exam_date']:
-                subject_index = (subject_index + 1) % len(subjects_to_schedule)
-                attempts += 1
-                continue
-            
-            # Check 3: 30-minute break satisfied?
-            break_satisfied = (slot['start_mins'] >= last_session_end[date_str] + 30)
-            
-            if break_satisfied:
-                # Schedule session
-                timetable[date_str].append({
-                    'subject': subject['name'],
-                    'start': minutes_to_time(slot['start_mins']),
-                    'end': minutes_to_time(slot['end_mins'])
-                })
-                
-                last_session_end[date_str] = slot['end_mins']
-                subject['sessions_needed'] -= 1
-                
-                # Remove subject if done
-                if subject['sessions_needed'] <= 0:
-                    subjects_to_schedule.pop(subject_index)
-                    if len(subjects_to_schedule) > 0:
-                        subject_index = subject_index % len(subjects_to_schedule)
-                else:
-                    subject_index = (subject_index + 1) % len(subjects_to_schedule)
-                
-                scheduled = True
-            else:
-                # Try next subject
-                subject_index = (subject_index + 1) % len(subjects_to_schedule)
-                attempts += 1
+        # Candidates: have sessions left and slot not after exam date
+        candidates = [s for s in subjects_to_schedule if s['sessions_needed'] > 0 and slot['date'] <= s['exam_date']]
+        if not candidates:
+            continue
+        chosen = pick_subject(candidates)
+        
+        # Place the session (no overlap guaranteed since each slot is unique and singular)
+        timetable[date_str].append({
+            'subject': chosen['name'],
+            'start': minutes_to_time(slot['start_mins']),
+            'end': minutes_to_time(slot['end_mins'])
+        })
+        
+        chosen['sessions_needed'] -= 1
+        # Enforce cooldown for subsequent slots on the same day
+        if break_minutes:
+            cooldown_until_by_day[date_str] = slot['end_mins'] + break_minutes
+        if chosen['sessions_needed'] <= 0:
+            subjects_to_schedule = [s for s in subjects_to_schedule if s['sessions_needed'] > 0]
     
     return timetable
 
@@ -354,6 +416,7 @@ if __name__ == "__main__":
     
     revision_count = 0
     commitment_count = 0
+    subject_counts = {}
     
     for day in sorted(timetable.keys()):
         print(f"\n{day}:")
@@ -361,10 +424,20 @@ if __name__ == "__main__":
             print(f"  {start} - {end}: {subject}")
             if "[COMMITMENT]" in subject:
                 commitment_count += 1
+            elif "[BREAK]" in subject:
+                # do not count breaks as revision sessions
+                continue
             else:
                 revision_count += 1
+                subject_counts[subject] = subject_counts.get(subject, 0) + 1
     
     print(f"\n{'='*70}")
     print(f"Revision sessions: {revision_count}")
     print(f"Commitments: {commitment_count}")
     print("="*70)
+    
+    if subject_counts:
+        print("\nSessions per subject:")
+        # Sort by descending count then name
+        for subj, cnt in sorted(subject_counts.items(), key=lambda x: (-x[1], x[0].lower())):
+            print(f"  {subj}: {cnt}")
